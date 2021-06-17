@@ -1,0 +1,77 @@
+@import "./common.css";
+
+.no-x-view {
+  background: var(--primary-background);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  height: 100%;
+  width: 100%;
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+}
+
+.no-x-view .inner {
+  position: relative;
+}
+
+.no-x-view p {
+  font-size: 13px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.no-x-view .retry-button {
+  background: none;
+  border: 1px solid var(--secondary-background);
+  color: var(--secondary-foreground);
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16.8px;
+
+  height: 30px;
+  width: 200px;
+}
+
+.no-x-view .retry-button:hover {
+  background: var(--secondary-background);
+  border-color: none;
+  color: var(--primary-foreground);
+}
+
+.no-x-view .retry-button:disabled {
+  opacity: .3;
+}
+
+.no-x-view-loading-indicator {
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  height: 100%;
+  width: 100%;
+}
+
+.no-x-view-loading-indicator .loader,
+.no-x-view-loading-indicator .loader:after {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+}

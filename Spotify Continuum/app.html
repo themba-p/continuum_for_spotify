@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <title>Spotify Continuum</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="./styles/app.css" />
+    <link rel="stylesheet" href="./styles/fonts.css" />
+  </head>
+
+  <body>
+    <nav id="top-nav">
+      <div id="search-container">
+        <button id="search-button" class="text-button svg-icon-button">
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 13 13"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5.5 10.5C8.26142 10.5 10.5 8.26142 10.5 5.5C10.5 2.73858 8.26142 0.5 5.5 0.5C2.73858 0.5 0.5 2.73858 0.5 5.5C0.5 8.26142 2.73858 10.5 5.5 10.5Z"
+              stroke="white"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M11.6464 12.3536C11.8417 12.5488 12.1583 12.5488 12.3536 12.3536C12.5488 12.1583 12.5488 11.8417 12.3536 11.6464L11.6464 12.3536ZM12.3536 11.6464L9.35355 8.64645L8.64645 9.35355L11.6464 12.3536L12.3536 11.6464Z"
+              fill="white"
+            />
+          </svg>
+        </button>
+        <input
+          id="search-bar"
+          type="search"
+          placeholder="Search track, playlist, album"
+          aria-label="search Spotify catalogue"
+          spellcheck="false"
+        />
+      </div>
+      <button class="close-button text-button">Close</button>
+    </nav>
+    <main>
+      <header id="header">
+        <div id="now-playing">
+          <div id="now-playing-inner">
+            <div id="now-playing-cover">
+              <img
+                id="now-playing-img"
+                src="./assets/cover-placeholder.svg"
+                alt=""
+              />
+            </div>
+            <div id="now-playing-info">
+              <p id="now-playing-status">...</p>
+              <h1 id="title">...</h1>
+              <p id="owner-wrapper">
+                <svg
+                  id="explicit-tag"
+                  width="10"
+                  height="10"
+                  viewBox="0 0 10 10"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10 0H0V10H10L10 0ZM7 3.25H4.66667V4.41667H7V5.58333H4.66667V6.75H7V7.91667H3.5V2.08333H7V3.25Z"
+                    fill="#B3B3B3"
+                  />
+                </svg>
+                <span id="owner">...</span>
+              </p>
+            </div>
+          </div>
+          <div class="content-fade"></div>
+          <div id="now-playing-actions-wrapper">
+            <button
+              id="player-toggle-like-button"
+              class="text-button like-inactive svg-icon-button"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M13.7305 3.28779C13.2793 3.09593 12.7962 3 12.2812 3C11.903 3 11.5658 3.04239 11.2695 3.12716C10.9733 3.21194 10.6976 3.33017 10.4424 3.48187C10.1917 3.62911 9.9502 3.80759 9.71777 4.01729C9.48991 4.22699 9.25065 4.45678 9 4.70664C8.74935 4.45678 8.50781 4.22699 8.27539 4.01729C8.04753 3.80759 7.80599 3.62911 7.55078 3.48187C7.30013 3.33017 7.02669 3.21194 6.73047 3.12716C6.43424 3.04239 6.09701 3 5.71875 3C5.20378 3 4.7207 3.09593 4.26953 3.28779C3.81836 3.47964 3.42415 3.74066 3.08691 4.07083C2.74967 4.39654 2.48307 4.78249 2.28711 5.22867C2.0957 5.67038 2 6.1411 2 6.64083C2 7.12716 2.09342 7.59342 2.28027 8.0396C2.47168 8.48578 2.74056 8.87842 3.08691 9.21751L9 15L14.9131 9.21751C15.2594 8.87842 15.526 8.48578 15.7129 8.0396C15.9043 7.59342 16 7.12716 16 6.64083C16 6.1411 15.902 5.67038 15.7061 5.22867C15.5146 4.78249 15.2503 4.39654 14.9131 4.07083C14.5758 3.74066 14.1816 3.47964 13.7305 3.28779Z"
+                />
+              </svg>
+            </button>
+            <div id="now-playing-indicator">
+              <img
+                width="12"
+                height="12"
+                alt=""
+                src="https://open.scdn.co/cdn/images/equaliser-animated-green.73b73928.gif"
+              />
+            </div>
+          </div>
+        </div>
+      </header>
+      <div id="list-view">
+        <header id="list-view-header">
+          <ul id="list-view-nav">
+            <li id="category-tracks" class="list-view-nav-item active">
+              Tracks
+            </li>
+            <li id="category-playlists" class="list-view-nav-item">
+              Playlists
+            </li>
+            <li id="category-albums" class="list-view-nav-item">Albums</li>
+          </ul>
+          <div id="filter-library-container">
+            <input
+              id="filter-bar"
+              type="search"
+              placeholder="filter..."
+              aria-label="Filter library content"
+              spellcheck="false"
+            />
+          </div>
+          <div id="filter-actions-wrapper">
+            <div class="filter-actions-inner">
+              <button id="filter-library-button" class="text-button">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 18 18"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect x="3" y="12" width="6" height="1" fill="white" />
+                  <path
+                    d="M12.5 12.5C12.5 13.6046 11.6046 14.5 10.5 14.5C9.39543 14.5 8.5 13.6046 8.5 12.5C8.5 11.3954 9.39543 10.5 10.5 10.5C11.6046 10.5 12.5 11.3954 12.5 12.5Z"
+                    stroke="white"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <rect x="12" y="12" width="3" height="1" fill="white" />
+                  <rect
+                    width="6"
+                    height="1"
+                    transform="matrix(-1 0 0 1 15 5)"
+                    fill="white"
+                  />
+                  <path
+                    d="M5.5 5.5C5.5 6.60457 6.39543 7.5 7.5 7.5C8.60457 7.5 9.5 6.60457 9.5 5.5C9.5 4.39543 8.60457 3.5 7.5 3.5C6.39543 3.5 5.5 4.39543 5.5 5.5Z"
+                    stroke="white"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <rect
+                    width="3"
+                    height="1"
+                    transform="matrix(-1 0 0 1 6 5)"
+                    fill="white"
+                  />
+                </svg>
+              </button>
+              <button
+                id="filter-close-button"
+                class="text-button svg-icon-button"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 0.639053L6.63905 6L12 11.3609L11.3609 12L6 6.63905L0.639053 12L0 11.3609L5.36095 6L0 0.639053L0.639053 0L6 5.36095L11.3609 0L12 0.639053Z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </header>
+        <div class="list-view-content-wrapper">
+          <ul id="list-view-content"></ul>
+          <div id="list-view-loading-indicator">
+            <div class="loading-indicator-background"></div>
+            <div class="loader">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav id="bottom-nav">
+      <div id="player-controls">
+        <button id="player-shuffle-button" class="text-button shuffle-off">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4.49999 6.8L5.19999 6C4.09999 4.7 2.49999 4 0.899994 4V5C2.19999 5 3.49999 5.6 4.39999 6.6L4.49999 6.8ZM12 11.5C10.8 11.5 9.69999 11 8.79999 10.2L8.19999 11C9.19999 12 10.6 12.5 12 12.5V14L15.5 12L12 10V11.5ZM12 5.5V7L15.5 5L12 3V4.5C10.4 4.5 8.79999 5.2 7.79999 6.5L4.39999 10.4C3.49999 11.4 2.19999 12 0.899994 12V13C2.49999 13 4.09999 12.3 5.09999 11L8.49999 7.1C9.39999 6.1 10.7 5.5 12 5.5Z"
+              fill="#ffffff"
+            />
+          </svg>
+        </button>
+        <button id="player-skip-back" class="text-button">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M13 2.5L5 7.119V3H3V13H5V8.881L13 13.5V2.5Z"
+                fill="#ffffff"
+              />
+            </g>
+          </svg>
+        </button>
+        <div id="player-playback-state">
+          <button id="player-play-button" class="text-button">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M5.24995 3V15L15 9L5.24995 3Z" />
+            </svg>
+          </button>
+          <button id="player-pause-button" class="text-button">
+            <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 0H0V10H3V0Z" fill="#030303"/>
+              <path d="M9 0H6V10H9V0Z" fill="#030303"/>
+              </svg>              
+          </button>
+        </div>
+        <button id="player-skip-forward" class="text-button">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M11 3V7.119L3 2.5V13.5L11 8.881V13H13V3H11Z"
+                fill="#ffffff"
+              />
+            </g>
+          </svg>
+        </button>
+        <button id="player-repeat-button" class="text-button">
+          <svg role="img" height="16" width="16" viewBox="0 0 16 16">
+            <path
+              d="M5.5 5H10v1.5l3.5-2-3.5-2V4H5.5C3 4 1 6 1 8.5c0 .6.1 1.2.4 1.8l.9-.5C2.1 9.4 2 9 2 8.5 2 6.6 3.6 5 5.5 5zm9.1 1.7l-.9.5c.2.4.3.8.3 1.3 0 1.9-1.6 3.5-3.5 3.5H6v-1.5l-3.5 2 3.5 2V13h4.5C13 13 15 11 15 8.5c0-.6-.1-1.2-.4-1.8z"
+              fill="#ffffff"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      <div id="player-loading-indicator">
+        <div class="loader">Loading...</div>
+      </div>
+    </nav>
+    <footer id="footer-nav">
+      <div class="footer-container">
+        <button id="devices-button" class="text-button">
+          <img
+            id="active-device-img"
+            src="./assets/device-default-inactive.svg"
+            alt="active device"
+          />
+          <span id="active-device-text">No devices </span>
+          <span id="active-device-name"></span>
+          <svg
+            id="devices-chev"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M12 10L8 6L4 10" />
+          </svg>
+        </button>
+      </div>
+      <div class="footer-container">
+        <button id="library-button" class="text-button svg-icon-button">
+          <svg
+            width="14"
+            height="13"
+            viewBox="0 0 14 13"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M7.46094 0.406737L8.37448 0L13.5399 11.6017L12.6263 12.0084L7.46094 0.406737Z"
+              fill="#fff"
+            />
+            <path d="M0 0.00318745H1V12.0032H0V0.00318745Z" fill="#fff" />
+            <path d="M4 0.00318745H5V12.0032H4V0.00318745Z" fill="#fff" />
+          </svg>
+        </button>
+        <button id="refresh-devices-button" class="text-button svg-icon-button">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M7.59961 0.222656C8.24805 0.398438 8.8418 0.673828 9.38086 1.04883C9.91992 1.41992 10.3828 1.86133 10.7695 2.37305C11.1602 2.88086 11.4629 3.44531 11.6777 4.06641C11.8926 4.68359 12 5.32812 12 6C12 6.55078 11.9277 7.08203 11.7832 7.59375C11.6426 8.10547 11.4414 8.58398 11.1797 9.0293C10.9219 9.47461 10.6094 9.88086 10.2422 10.248C9.87891 10.6113 9.47461 10.9238 9.0293 11.1855C8.58398 11.4434 8.10547 11.6445 7.59375 11.7891C7.08203 11.9297 6.55078 12 6 12C5.44922 12 4.91797 11.9297 4.40625 11.7891C3.89453 11.6445 3.41602 11.4434 2.9707 11.1855C2.52539 10.9238 2.11914 10.6113 1.75195 10.248C1.38867 9.88086 1.07617 9.47461 0.814453 9.0293C0.556641 8.58398 0.355469 8.10742 0.210938 7.59961C0.0703125 7.08789 0 6.55469 0 6C0 5.45312 0.0722656 4.92188 0.216797 4.40625C0.361328 3.89062 0.566406 3.40625 0.832031 2.95312C1.10156 2.49609 1.42773 2.08203 1.81055 1.71094C2.19336 1.33594 2.625 1.01562 3.10547 0.75H1.5V0H4.5V3H3.75V1.25977C3.29297 1.47852 2.87891 1.75391 2.50781 2.08594C2.14062 2.41406 1.82617 2.78516 1.56445 3.19922C1.30273 3.60938 1.10156 4.05273 0.960938 4.5293C0.820312 5.00586 0.75 5.49609 0.75 6C0.75 6.48047 0.8125 6.94531 0.9375 7.39453C1.0625 7.83984 1.23828 8.25781 1.46484 8.64844C1.69531 9.03516 1.9707 9.38867 2.29102 9.70898C2.61133 10.0293 2.96484 10.3047 3.35156 10.5352C3.74219 10.7617 4.16016 10.9375 4.60547 11.0625C5.05078 11.1875 5.51562 11.25 6 11.25C6.48047 11.25 6.94336 11.1875 7.38867 11.0625C7.83789 10.9375 8.25586 10.7617 8.64258 10.5352C9.0332 10.3047 9.38867 10.0293 9.70898 9.70898C10.0293 9.38867 10.3027 9.03516 10.5293 8.64844C10.7598 8.25781 10.9375 7.83984 11.0625 7.39453C11.1875 6.94922 11.25 6.48438 11.25 6C11.25 5.41406 11.1543 4.84961 10.9629 4.30664C10.7754 3.76367 10.5117 3.26953 10.1719 2.82422C9.83203 2.37891 9.42578 1.99414 8.95312 1.66992C8.48438 1.3418 7.9668 1.09961 7.40039 0.943359L7.59961 0.222656Z"
+              fill="white"
+            />
+          </svg>
+        </button>
+        <button id="profile-button" class="text-button svg-icon-button">
+          <svg
+            width="11"
+            height="12"
+            viewBox="0 0 11 12"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M10 4.5C10 6.18175 9.07746 7.64802 7.71084 8.42037C9.32345 9.06468 10.641 10.3923 11 12H10C9.50772 10.3217 7.66175 9 5.5 9C3.33824 9 1.49228 10.3217 1 12L0 12C0.358985 10.3923 1.67654 9.06468 3.28915 8.42037C1.92253 7.64802 0.999996 6.18175 0.999996 4.5C0.999996 2.01472 3.01471 0 5.5 0C7.98528 0 10 2.01472 10 4.5ZM5.5 8C7.43299 8 9 6.433 9 4.5C9 2.567 7.43299 1 5.5 1C3.567 1 2 2.567 2 4.5C2 6.433 3.567 8 5.5 8Z"
+              fill="white"
+            />
+          </svg>
+          <!-- <img
+            id="profile-img"
+            src="./assets/cover-transparent.svg"
+            alt=""
+            loading="lazy"
+          /> -->
+        </button>
+      </div>
+    </footer>
+
+    <div id="login-view">
+      <div class="login-inner">
+        <p>Sign in with your account.</p>
+        <div class="sign-in-button-container">
+          <button id="sign-in-button">
+            <span>Continue with Spotify</span>
+            <img src="./assets/spotify-icon-vector.svg" alt="" />
+          </button>
+          <div id="login-view-loading-indicator">
+            <div class="loader">Loading...</div>
+          </div>
+        </div>
+        <!-- <button id="sign-in-button">
+          <div>
+            <span>Continue with Spotify</span>
+            <img src="./assets/spotify-icon-vector.svg" alt="" />
+            <div id="login-view-loading-indicator">
+              <div class="loader">Loading...</div>
+            </div>
+          </div>
+        </button> -->
+      </div>
+    </div>
+    <div id="no-device-view" class="no-x-view">
+      <div class="inner">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 40 40"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M6 32L34 32" stroke="white" />
+          <rect x="6.5" y="8.5" width="27" height="19" stroke="white" />
+          <line
+            x1="2.01857"
+            y1="30.5893"
+            x2="38.0186"
+            y2="5.58932"
+            stroke="white"
+          />
+        </svg>
+        <div class="no-x-view-loading-indicator">
+          <div class="loader">Loading...</div>
+        </div>
+      </div>
+      <p>No active devices found!</p>
+      <button class="retry-button">Retry</button>
+    </div>
+    <div id="no-network-view" class="no-x-view">
+      <div class="inner">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 40 40"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M20 30H20.0167"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M15.2867 25.2867C16.5369 24.0368 18.2323 23.3347 20 23.3347C21.7678 23.3347 23.4632 24.0368 24.7133 25.2867"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M23.95 17.2633C26.0211 17.9101 27.9021 19.0546 29.4283 20.5967M10.5717 20.5717C12.339 18.7993 14.5716 17.5628 17.0117 17.005L10.5717 20.5717Z"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M16.9333 10.2333C20.0418 9.75135 23.2202 10.0094 26.2102 10.9865C29.2002 11.9635 31.9176 13.6321 34.1417 15.8567M5.85834 15.8583C7.56407 14.1491 9.56525 12.7628 11.765 11.7667L5.85834 15.8583Z"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M5 3.33334L35 33.3333"
+            stroke="white"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <div class="no-x-view-loading-indicator">
+          <div class="loader">Loading...</div>
+        </div>
+      </div>
+      <p>No network connection!</p>
+      <button class="retry-button text-button-border">Retry</button>
+    </div>
+    <div id="profile-view" class="overlay">
+      <div class="overlay-inner">
+        <div class="profile-info-wrapper">
+          <div id="profile-info">
+            <div class="profile-cover">
+              <img
+                id="profile-img-main"
+                src="./assets/cover-transparent.svg"
+                alt=""
+              />
+              <p class="profile-name-initials"></p>
+            </div>
+            <div class="profile-details">
+              <p id="profile-name">...</p>
+              <a
+                id="open-profile-button"
+                class="text-button"
+                target="_blank"
+                href="http://open.spotify.com"
+              >
+                <span>View profile</span>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M5.5 11L9 7.5L5.5 4" />
+                </svg>
+              </a>
+            </div>
+          </div>
+          <div id="profile-view-actions">
+            <button id="sign-out-button" class="text-button">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="devices-view" class="overlay">
+      <div class="overlay-inner">
+        <ul id="devices-list-view"></ul>
+        <div id="devices-view-loading-indicator">
+          <div class="loading-indicator-background"></div>
+          <div class="loader">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="message-popup">
+      <p class="content"></p>
+    </div>
+    <div id="global-loading-indicator" class="loader-container">
+      <div class="loading-indicator-background"></div>
+      <div class="loader">Loading...</div>
+    </div>
+
+    <script src="./bundle.js"></script>
+  </body>
+</html>

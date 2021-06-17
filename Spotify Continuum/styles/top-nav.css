@@ -1,0 +1,83 @@
+@import "./common.css";
+
+#top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  height: 44px;
+  width: 100%;
+
+  overflow: hidden;
+  position: relative;
+  top: 0;
+  z-index: 100;
+
+  transform: translate3d(0, 0, 0);
+  will-change: max-height;
+}
+
+#top-nav .close-button {
+  /* margin-left: auto; */
+  padding: 0 16px;
+}
+
+#search-container {
+  background: none;
+  border-radius: 10px;
+  
+  display: flex;
+  align-items: center;
+
+  height: 28px;
+  margin-left: 10px;
+  padding-left: 4px;
+
+  overflow: hidden;
+
+  will-change: background;
+}
+
+#search-button {
+  height: 100%;
+  width: 32px;
+}
+
+#search-button svg path {
+  fill: none;
+  stroke: var(--secondary-foreground);
+}
+
+#search-button svg path:last-of-type {
+  stroke: none;
+  fill: var(--secondary-foreground);
+}
+
+#search-bar {
+  background: none;
+  border: none;
+  color: var(--primary-foreground);
+
+  font-size: 14px;
+  font-weight: 400;
+
+  height: 100%;
+  width: 200px;
+
+  opacity: 0;
+
+  padding: 0 12px 2px 0;
+
+  will-change: opacity;
+}
+
+#search-bar:focus {
+  outline: none;
+}
+
+::placeholder {
+  color: var(--primary-foreground);
+  opacity: .5;
+  font-size: 12px;
+  font-weight: 400;
+}
