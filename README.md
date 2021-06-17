@@ -23,7 +23,8 @@ const spotifyCredentials = {
   scope: _scope.join(" "),
 };
 ```
-The extension does not use a server to handle authentication so be careful not to expose your developer credentials. 
+The extension does not use a server to handle authentication so be careful not to expose your developer credentials.\
+To sideload the extension, follow these instructions: [Sideload extension on Edge](https://docs.microsoft.com/en-us/microsoft-edge/extensions-chromium/getting-started/extension-sideloading). Method is similar with Google Chrome, just replace "edge://extensions" with "chrome://extensions"
 
 ### Created with the help of:
 - Spotify Api Wrapper Js [Spotify Web API JS](https://github.com/JMPerez/spotify-web-api-js).
