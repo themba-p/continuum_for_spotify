@@ -1,4 +1,6 @@
+
 # Continuum for Spotify
+![Spotify Continuum (1)](https://user-images.githubusercontent.com/57948152/122431318-a416d000-cf94-11eb-9d59-38555cc90b77.png)
 
 An extension for Google Chrome ( and Microsoft Edge) that allows you to control your Spotify playback on any active devices.\
 This is a personal project to learn more about developing in javascript and chrome extensions.
