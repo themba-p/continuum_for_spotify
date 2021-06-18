@@ -9,8 +9,8 @@ const _scope = [
 ];
 
 const spotifyCredentials = {
-  clientId: "",
-  clientSecret: "",
+  clientId: "<CLIENT ID HERE>",
+  clientSecret: "<CLIENT SECRET HERE>",
   redirectUri: chrome.identity.getRedirectURL(),
   scope: _scope.join(" "),
 };
