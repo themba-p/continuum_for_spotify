@@ -27,9 +27,7 @@ exports.Initialize = () => {
   profileButton = document.getElementById("profile-button");
   libraryButton = document.getElementById("library-button");
 
-  devicesButton.disabled = true;
-  profileButton.disabled = true;
-  libraryButton.disabled = true;
+  this.SetButtonsDisabled(true);
 }
 
 exports.InitPlaybackButtons = ({
@@ -154,11 +152,11 @@ exports.SwitchView = async (view, oldValue) => {
   document.getElementById("login-view").style.display =
     view != Common.View.Login ? "none" : "flex";
 
-  // document.getElementById("no-device-view").style.display =
-  //   view != Common.View.NoDevice ? "none" : "flex";
+  document.getElementById("no-device-view").style.display =
+    view != Common.View.NoDevice ? "none" : "flex";
 
-  // document.getElementById("no-network-view").style.display =
-  //   view != Common.View.NoNetwork ? "none" : "flex";
+  document.getElementById("no-network-view").style.display =
+    view != Common.View.NoNetwork ? "none" : "flex";
 
   switch (view) {
     case Common.View.Player:
@@ -413,6 +411,7 @@ exports.UpdateNowplaying = ({ title, author, imgUrl, explicit }) => {
 };
 
 exports.TogglePlaybackState = ({ isPlaying }) => {
+  log(isPlaying);
   playerPlayButton.style.display = isPlaying ? "none" : "block";
   playerPauseButton.style.display = isPlaying ? "block" : "none";
   nowPlayingIndicator.style.display = isPlaying ? "flex" : "none";

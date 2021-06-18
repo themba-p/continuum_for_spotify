@@ -23,20 +23,19 @@ function log(content) {
 })();
 
 async function initialize() {
-  log("Initializing...");
   AppDOM.ShowLoadingIndicator(Common.View.Library);
-  switchView(Common.View.Login);
-  // chrome.runtime.sendMessage({ message: "login" }, async (response) => {
-  //   AppDOM.ShowLoadingIndicator(Common.View.Player, false);
-  //   if (response.token) {
-  //     Spotify.prototype.setAccessToken(response.token);
-  //     loadNowplaying();
-  //     loadProfile();
-  //     AppDOM.SetButtonsDisabled(false);
-  //   } else {
-  //     checkFailureReason();
-  //   }
-  // });
+  
+  chrome.runtime.sendMessage({ message: "login" }, async (response) => {
+    AppDOM.ShowLoadingIndicator(Common.View.Player, false);
+    if (response?.token) {
+      Spotify.prototype.setAccessToken(response.token);
+      loadNowplaying();
+      loadProfile();
+      AppDOM.SetButtonsDisabled(false);
+    } else {
+      checkFailureReason();
+    }
+  });
 }
 
 function initPlaybackButtons() {
@@ -172,10 +171,15 @@ function initCategories() {
 function signIn() {
   AppDOM.ShowLoadingIndicator(Common.View.Login);
   chrome.runtime.sendMessage({ message: "authenticate" }, function(response) {
-    log("authentication callback running..." + response);
     AppDOM.ShowLoadingIndicator(Common.View.Login, false);
+
     if (chrome.runtime.lastError) log(chrome.runtime.lastError);
-    else initialize();
+
+    if (!response.token) {
+      AppDOM.ShowMessagePopup("Authentication error, please try again...");
+    } else {
+      initialize(response.token);
+    }
   });
 }
 
@@ -282,6 +286,10 @@ function loadProfile() {
 }
 
 function updatePlaybackState(response) {
+  if (response?.isSaved) {
+    AppDOM.ToggleLikeState(response.isSaved)
+  }
+
   if (_nowplaying) {
     if (_nowplaying.shuffleState != response.shuffleState) {
       AppDOM.ToggleShuffleState(response);
@@ -293,13 +301,6 @@ function updatePlaybackState(response) {
 
     if (_nowplaying.repeatState != response.repeatState) {
       AppDOM.ToggleRepeatState(response);
-    }
-
-    if (response?.isSaved) {
-      if (response.isSaved != _nowplaying.isSaved)
-        AppDOM.ToggleLikeState(response.isSaved);
-    } else {
-      AppDOM.ToggleLikeState(false);
     }
 
     if (_nowplaying.device) {
@@ -327,7 +328,6 @@ function probeNowplaying() {
 
         //isCurrentTrackSaved(response.id);
         response.isSaved = await Spotify.prototype.isTracksSaved(response.id);
-        chrome.runtime.sendMessage({ message: "nowplaying", item: response });
         AppDOM.ShowLoadingIndicator(Common.View.Player, false);
       }
 
@@ -349,11 +349,11 @@ function loadNowplaying(switchToView = true) {
       if (response) {
         AppDOM.TogglePlackbackDisabledState(false);
 
-        chrome.runtime.sendMessage({ message: "nowplaying", item: response });
         AppDOM.UpdateNowplaying(response);
         if (response.device) AppDOM.UpdateActiveDevice(response.device);
         response.isSaved = await Spotify.prototype.isTracksSaved(response.id);
         updatePlaybackState(response);
+        AppDOM.TogglePlaybackState(response);
         _nowplaying = response;
       } else {
         AppDOM.TogglePlackbackDisabledState(true);
@@ -672,9 +672,7 @@ exports.Initialize = () => {
   profileButton = document.getElementById("profile-button");
   libraryButton = document.getElementById("library-button");
 
-  devicesButton.disabled = true;
-  profileButton.disabled = true;
-  libraryButton.disabled = true;
+  this.SetButtonsDisabled(true);
 }
 
 exports.InitPlaybackButtons = ({
@@ -799,11 +797,11 @@ exports.SwitchView = async (view, oldValue) => {
   document.getElementById("login-view").style.display =
     view != Common.View.Login ? "none" : "flex";
 
-  // document.getElementById("no-device-view").style.display =
-  //   view != Common.View.NoDevice ? "none" : "flex";
+  document.getElementById("no-device-view").style.display =
+    view != Common.View.NoDevice ? "none" : "flex";
 
-  // document.getElementById("no-network-view").style.display =
-  //   view != Common.View.NoNetwork ? "none" : "flex";
+  document.getElementById("no-network-view").style.display =
+    view != Common.View.NoNetwork ? "none" : "flex";
 
   switch (view) {
     case Common.View.Player:
@@ -1058,6 +1056,7 @@ exports.UpdateNowplaying = ({ title, author, imgUrl, explicit }) => {
 };
 
 exports.TogglePlaybackState = ({ isPlaying }) => {
+  log(isPlaying);
   playerPlayButton.style.display = isPlaying ? "none" : "block";
   playerPauseButton.style.display = isPlaying ? "block" : "none";
   nowPlayingIndicator.style.display = isPlaying ? "flex" : "none";
