@@ -8,31 +8,36 @@ let currentView, currentCategory;
 let _nowplaying, npInterval;
 let waitingForPlaybackTransfer = false;
 
-// let font1 = new FontFace("HLVT_NT", "url('../fonts/HelveticaNowText-Regular.woff2')");
-// let font2 = new FontFace("HLVT_NT", "url('../fonts/HelveticaNowText-Medium.woff2')");
-// let font3 = new FontFace("HLVT_NT", "url('../fonts/HelveticaNowText-Bold.woff2')");
-// document.fonts.add(font1);
-// document.fonts.add(font2);
-// document.fonts.add(font3);
-
-function log(message) {
+function log(content) {
   chrome.runtime.sendMessage({
     message: "log",
-    error: message,
+    content: content,
   });
 }
 
 (() => {
-  chrome.runtime.sendMessage({ message: "nowplaying" }, (nowplaying) => {
-    _nowplaying = nowplaying;
-    if (nowplaying) {
-      AppDOM.UpdateNowplaying(nowplaying);
-      initPlaybackButtons();
-      initButtons();
-      initialize();
-    }
-  });
+  initPlaybackButtons();
+  initButtons();
+  AppDOM.Initialize();
+  initialize();
 })();
+
+async function initialize() {
+  log("Initializing...");
+  AppDOM.ShowLoadingIndicator(Common.View.Library);
+  switchView(Common.View.Login);
+  // chrome.runtime.sendMessage({ message: "login" }, async (response) => {
+  //   AppDOM.ShowLoadingIndicator(Common.View.Player, false);
+  //   if (response.token) {
+  //     Spotify.prototype.setAccessToken(response.token);
+  //     loadNowplaying();
+  //     loadProfile();
+  //     AppDOM.SetButtonsDisabled(false);
+  //   } else {
+  //     checkFailureReason();
+  //   }
+  // });
+}
 
 function initPlaybackButtons() {
   const playbackFunctions = {
@@ -140,23 +145,6 @@ function initButtons() {
     });
 }
 
-async function initialize() {
-  await switchView(Common.View.Player);
-  AppDOM.ShowLoadingIndicator(Common.View.Library);
-
-  chrome.runtime.sendMessage({ message: "login" }, async (response) => {
-    AppDOM.ShowLoadingIndicator(Common.View.Player, false);
-
-    if (response && response.token) {
-      Spotify.prototype.setAccessToken(response.token);
-      loadNowplaying();
-      loadProfile();
-    } else {
-      checkFailureReason();
-    }
-  });
-}
-
 function initCategories() {
   if (
     categoryTracks != null &&
@@ -183,9 +171,11 @@ function initCategories() {
 
 function signIn() {
   AppDOM.ShowLoadingIndicator(Common.View.Login);
-  chrome.runtime.sendMessage({ message: "authenticate" }, () => {
+  chrome.runtime.sendMessage({ message: "authenticate" }, function(response) {
+    log("authentication callback running..." + response);
     AppDOM.ShowLoadingIndicator(Common.View.Login, false);
-    initialize();
+    if (chrome.runtime.lastError) log(chrome.runtime.lastError);
+    else initialize();
   });
 }
 
@@ -202,35 +192,26 @@ function signOut() {
 
 async function checkFailureReason() {
   AppDOM.ShowLoadingIndicator(Common.View.NoXView);
-
-  // log("checking failure reason...");
-
   chrome.runtime.sendMessage({ message: "login" }, async (response) => {
     if (response && response?.token) {
       if (await Common.IsConnected()) {
-        // log("network connection active...");
-
         if (!(await hasActiveDevices())) {
           AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
-          // log("no active devices!");
           switchView(Common.View.NoDevice);
         } else {
           AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
-          // generic error
+          switchView(Common.View.Player);
         }
       } else {
         AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
-        // log("no network connection...");
         switchView(Common.View.NoNetwork);
       }
     } else {
       if (await Common.IsConnected()) {
         AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
-        // log("user is not logged in!");
         switchView(Common.View.Login);
       } else {
         AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
-        // log("no network connection...");
         switchView(Common.View.NoNetwork);
       }
     }
@@ -323,11 +304,10 @@ function updatePlaybackState(response) {
 
     if (_nowplaying.device) {
       if (_nowplaying.device.id != response.device.id) {
-        if (waitingForPlaybackTransfer)
-          {
-            waitingForPlaybackTransfer = false;
-            AppDOM.ShowLoadingIndicator(Common.View.Devices, false);
-          }
+        if (waitingForPlaybackTransfer) {
+          waitingForPlaybackTransfer = false;
+          AppDOM.ShowLoadingIndicator(Common.View.Devices, false);
+        }
 
         AppDOM.UpdateActiveDevice(response.device);
       }
@@ -483,7 +463,7 @@ function loadDevices() {
         AppDOM.AnimateListViewItems(currentView);
       } else {
         log("No active devices!");
-        //switchView(Common.View.NoDevice); debug
+        switchView(Common.View.NoDevice);
       }
     })
     .finally(() => AppDOM.ShowLoadingIndicator(Common.View.Devices, false));
@@ -662,8 +642,6 @@ function getNewRepeatState({ repeatState }) {
   }
 }
 
-// browserify app.js -o bundle.js
-
 },{"./modules/App-DOM.js":2,"./modules/common.js":4,"./modules/spotify.js":5}],2:[function(require,module,exports){
 const Common = require("./common.js");
 const anime = require("animejs");
@@ -677,6 +655,8 @@ let playerPlayButton,
   playerSkipBackButton,
   playerRepeatButton;
 
+let devicesButton, profileButton, libraryButton;
+
 const listViewContent = document.getElementById("list-view-content");
 const devicesListView = document.getElementById("devices-list-view");
 
@@ -685,6 +665,16 @@ function log(message) {
     message: "log",
     error: message,
   });
+}
+
+exports.Initialize = () => {
+  devicesButton = document.getElementById("devices-button");
+  profileButton = document.getElementById("profile-button");
+  libraryButton = document.getElementById("library-button");
+
+  devicesButton.disabled = true;
+  profileButton.disabled = true;
+  libraryButton.disabled = true;
 }
 
 exports.InitPlaybackButtons = ({
@@ -713,6 +703,12 @@ exports.InitPlaybackButtons = ({
 
   this.TogglePlackbackDisabledState(true);
 };
+
+exports.SetButtonsDisabled = (disabled) => {
+  devicesButton.disabled = disabled;
+  profileButton.disabled = disabled;
+  libraryButton.disabled = disabled;
+}
 
 exports.TogglePlackbackDisabledState = (isDisabled) => {
   playerPlayButton.disabled = isDisabled;
@@ -803,11 +799,11 @@ exports.SwitchView = async (view, oldValue) => {
   document.getElementById("login-view").style.display =
     view != Common.View.Login ? "none" : "flex";
 
-  document.getElementById("no-device-view").style.display =
-    view != Common.View.NoDevice ? "none" : "flex";
+  // document.getElementById("no-device-view").style.display =
+  //   view != Common.View.NoDevice ? "none" : "flex";
 
-  document.getElementById("no-network-view").style.display =
-    view != Common.View.NoNetwork ? "none" : "none"; // debug
+  // document.getElementById("no-network-view").style.display =
+  //   view != Common.View.NoNetwork ? "none" : "flex";
 
   switch (view) {
     case Common.View.Player:
@@ -1027,8 +1023,6 @@ const nowPlayingIndicator = document.getElementById("now-playing-indicator");
 
 exports.UpdateProfile = ({ name, imgUrl, uri }) => {
   if (!imgUrl) imgUrl = "./assets/cover-transparent.svg";
-
-  // document.getElementById("profile-img").src = imgUrl;
 
   if (imgUrl) {
     document.querySelector("#profile-view .profile-cover").style.background =

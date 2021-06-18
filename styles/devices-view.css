@@ -1,0 +1,131 @@
+@import "./fonts.css";
+
+.device-item {
+  color: var(--primary-foreground);
+
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.1;
+
+  height: 36px;
+  width: 100%;
+
+  position: relative;
+  padding: 0 12px;
+  transition: background .15s linear;
+}
+
+.device-item,
+.device-icon-wrapper,
+.device-active-indicator,
+.device-select-button,
+.device-item-actions-inner {
+  display: flex;
+  align-items: center;
+}
+
+.device-icon-wrapper {
+  overflow: hidden;
+  justify-content: center;
+
+  height: 100%;
+  width: 36px;
+
+  margin-right: 4px;
+}
+
+.device-item-actions {
+  height: 100%;
+  position: absolute;
+  right: 16px;
+}
+
+.device-item-actions-inner {
+  justify-content: center;
+  height: 100%;
+
+  position: relative;
+  width: 60px;
+}
+
+.device-name {
+  font-weight: 500;
+  max-width: 170px;
+  line-height: 1.1;
+  white-space: nowrap;
+  /* overflow: hidden; */
+  text-overflow: ellipsis;
+}
+
+.device-select-button,
+.device-active-indicator {
+  height: 100%;
+  position: absolute;
+}
+
+.device-select-button {
+  display: flex;
+  border: 1px solid var(--secondary-background);
+  color: var(--secondary-foreground);
+  border-radius: 24px;
+
+  font-size: 12px;
+  font-weight: 400;
+
+  height: 28px;
+  width: 60px;
+}
+
+.device-item:hover .device-select-button {
+  color: var(--brand-primary-color);
+}
+
+.device-active-indicator {
+  display: none;
+  justify-content: center;
+  margin-right: -40px;
+
+  height: 36px;
+  width: 36px;
+}
+
+.device-active .device-active-indicator {
+  display: flex;
+}
+
+.device-active .device-select-button {
+  display: none;
+}
+
+.device-item:hover {
+  color: var(--secondary-foreground);
+  background: var(--secondary-background);
+}
+
+#devices-view-loading-indicator {
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+#devices-view-loading-indicator,
+#devices-view-loading-indicator .loading-indicator-background {
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  height: 100%;
+  width: 100%;
+}
+
+#devices-view-loading-indicator .loading-indicator-background {
+  background: var(--primary-background);
+  opacity: 0.95;
+}
+
+#devices-view-loading-indicator .loader,
+#devices-view-loading-indicator .loader:after {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}

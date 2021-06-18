@@ -1,0 +1,33 @@
+#message-popup {
+  background: #fff;
+  display: flex;
+  align-items: center;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate3d(0, -100%, 0);
+  z-index: 101;
+
+  opacity: 0;
+
+  padding: 0px 16px;
+
+  height: 44px; 
+  width: 100%;
+
+  overflow: hidden;
+}
+
+#message-popup p {
+  background: white;
+  color: var(--primary-background);
+
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  max-width: 80%;
+}

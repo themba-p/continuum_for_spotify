@@ -1,0 +1,37 @@
+@import "./common.css";
+@import "./top-nav.css";
+@import "./header.css";
+@import "./list-view.css";
+@import "./bottom-nav.css";
+@import "./footer-nav.css";
+
+@import "./loading-indicator.css";
+@import "./login-view.css";
+@import "./welcome-view.css";
+@import "./no-x-view.css";
+@import "./message-popup.css";
+@import "./profile-view.css";
+@import "./devices-view.css";
+
+* {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif !important;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.1;
+
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+body {
+  background: var(--primary-background);
+  color: var(--primary-foreground);
+
+  overflow: hidden;
+  position: relative;
+  max-height: 520px;
+  width: 324px;
+}

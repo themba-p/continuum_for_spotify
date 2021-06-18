@@ -1,0 +1,102 @@
+@import "./common.css";
+
+#footer-nav {
+  background: var(--secondary-background);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+
+  overflow: hidden;
+
+  height: 36px;
+  width: 100%;
+
+  padding-right: 8px;
+
+  transform: translate3d(0, 0, 0);
+  text-align: left;
+  will-change: max-height;
+}
+
+.footer-container:last-of-type button {
+  margin-left: 8px;
+  padding: 0;
+  height: 100%;
+  width: 36px;
+}
+
+.footer-container {
+  display: flex;
+  align-items: center;
+  padding-right: 4px;
+}
+
+#devices-button {
+  color: var(--secondary-foreground);
+  font-size: 12px;
+  line-height: 1.1;
+
+  padding: 0 0 0 12px;
+  transition: color 0.2s linear;
+}
+
+#devices-button:hover {
+  color: var(--primary-foreground);
+}
+
+#devices-button:hover svg path {
+  stroke: var(--primary-foreground);
+}
+
+#devices-button img {
+  margin-right: 4px;
+
+}
+
+#active-device-text {
+  text-align: left;
+}
+
+#active-device-name {
+  color: var(--primary-foreground);
+  font-weight: 500;
+  margin: 0 2px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  max-width: 100px;
+}
+
+#devices-chev {
+  margin-top: 1px;
+  transform: rotate(180deg);
+}
+
+#devices-button svg path {
+  stroke: var(--secondary-foreground);
+}
+
+.device-active svg rect,
+.has-devices svg path {
+  stroke: var(--brand-primary-color);
+}
+
+.device-inactive svg rect,
+.no-devices svg path {
+  stroke: var(--brand-primary-color);
+}
+
+#profile-button {
+  height: 20px;
+  width: 20px;
+
+  overflow: hidden;
+}
+
+#refresh-devices-button {
+  display: none;
+}
