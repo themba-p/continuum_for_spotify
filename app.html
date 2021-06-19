@@ -57,13 +57,13 @@
                 <svg
                   id="explicit-tag"
                   width="10"
-                  height="10"
-                  viewBox="0 0 10 10"
+                  height="11"
+                  viewBox="0 0 10 11"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M10 0H0V10H10L10 0ZM7 3.25H4.66667V4.41667H7V5.58333H4.66667V6.75H7V7.91667H3.5V2.08333H7V3.25Z"
+                    d="M10 0H0V11H10L10 0ZM7 3L4 3V5H7L7 6H4V8H7V9H3V2H7V3Z"
                     fill="#B3B3B3"
                   />
                 </svg>
@@ -75,7 +75,7 @@
           <div id="now-playing-actions-wrapper">
             <button
               id="player-toggle-like-button"
-              class="text-button like-inactive svg-icon-button"
+              class="text-button like-inactive"
             >
               <svg
                 width="18"
@@ -231,10 +231,16 @@
             </svg>
           </button>
           <button id="player-pause-button" class="text-button">
-            <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 0H0V10H3V0Z" fill="#030303"/>
-              <path d="M9 0H6V10H9V0Z" fill="#030303"/>
-              </svg>              
+            <svg
+              width="9"
+              height="10"
+              viewBox="0 0 9 10"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M3 0H0V10H3V0Z" fill="#030303" />
+              <path d="M9 0H6V10H9V0Z" fill="#030303" />
+            </svg>
           </button>
         </div>
         <button id="player-skip-forward" class="text-button">
@@ -319,34 +325,37 @@
             />
           </svg>
         </button>
-        <button id="profile-button" class="text-button svg-icon-button">
-          <svg
-            width="11"
-            height="12"
-            viewBox="0 0 11 12"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fill-rule="evenodd"
-              clip-rule="evenodd"
-              d="M10 4.5C10 6.18175 9.07746 7.64802 7.71084 8.42037C9.32345 9.06468 10.641 10.3923 11 12H10C9.50772 10.3217 7.66175 9 5.5 9C3.33824 9 1.49228 10.3217 1 12L0 12C0.358985 10.3923 1.67654 9.06468 3.28915 8.42037C1.92253 7.64802 0.999996 6.18175 0.999996 4.5C0.999996 2.01472 3.01471 0 5.5 0C7.98528 0 10 2.01472 10 4.5ZM5.5 8C7.43299 8 9 6.433 9 4.5C9 2.567 7.43299 1 5.5 1C3.567 1 2 2.567 2 4.5C2 6.433 3.567 8 5.5 8Z"
-              fill="white"
-            />
-          </svg>
-          <!-- <img
-            id="profile-img"
-            src="./assets/cover-transparent.svg"
-            alt=""
-            loading="lazy"
-          /> -->
-        </button>
+        <div class="profile-button-wrapper">
+          <button id="profile-button" class="text-button svg-icon-button">
+            <svg
+              width="11"
+              height="12"
+              viewBox="0 0 11 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M10 4.5C10 6.18175 9.07746 7.64802 7.71084 8.42037C9.32345 9.06468 10.641 10.3923 11 12H10C9.50772 10.3217 7.66175 9 5.5 9C3.33824 9 1.49228 10.3217 1 12L0 12C0.358985 10.3923 1.67654 9.06468 3.28915 8.42037C1.92253 7.64802 0.999996 6.18175 0.999996 4.5C0.999996 2.01472 3.01471 0 5.5 0C7.98528 0 10 2.01472 10 4.5ZM5.5 8C7.43299 8 9 6.433 9 4.5C9 2.567 7.43299 1 5.5 1C3.567 1 2 2.567 2 4.5C2 6.433 3.567 8 5.5 8Z"
+                fill="white"
+              />
+            </svg>
+            <!-- <img
+              id="profile-img"
+              src="./assets/cover-transparent.svg"
+              alt=""
+              loading="lazy"
+            /> -->
+          </button>
+          <div class="loader">Loading...</div>
+        </div>
       </div>
     </footer>
 
     <div id="login-view">
       <div class="login-inner">
-        <img class="logo" src="./assets/Logo.svg" alt="">
+        <img class="logo" src="./assets/Logo.svg" alt="" />
         <p>Connect to your Spotify account</p>
         <div class="sign-in-button-container">
           <button id="sign-in-button">
@@ -470,7 +479,9 @@
             </div>
           </div>
           <div id="profile-view-actions">
-            <button id="sign-out-button" class="text-button">Sign out</button>
+            <button id="sign-out-button" disabled class="text-button">
+              Sign out
+            </button>
           </div>
         </div>
       </div>

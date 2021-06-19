@@ -20,6 +20,8 @@
   display: flex;
   align-items: center;
 
+  height: 36px;
+
   margin-bottom: 8px;
   position: relative;
 }
@@ -41,7 +43,9 @@
   height: 100%;
   width: 100%;
 
-  padding-right: 48px;
+  /* padding-right: 48px; */
+  position: absolute;
+  left: 0;
 }
 
 #filter-bar {
@@ -55,20 +59,20 @@
   font-weight: 500;
 
   height: 28px;
-  width: 100%;
+  width: 250px;
 
-  margin: 3px 8px 3px 0;
+  margin: 3px 0px 3px 0;
   margin-right: 8px;
 
   padding: 0 12px 2px 12px;
 
   transition: background .2s linear, opacity .2s linear;
-  will-change: background, opacity;
+  will-change: opacity, max-width;
 }
 
 #filter-bar::placeholder {
   color: var(--primary-background);
-  opacity: .7;
+  opacity: .85;
   font-weight: 500;
 }
 
@@ -78,6 +82,7 @@
 
 #filter-actions-wrapper {
   position: absolute;
+  z-index: 10;
   right: 0;
   height: 36px;
   width: 36px;
@@ -108,6 +113,10 @@
   transform: scale(.85);
 }
 
+#filter-library-button:disabled {
+  opacity: .3;
+}
+
 #filter-close-button {
   display: none;
 }
@@ -134,7 +143,7 @@
   width: auto;
 
   opacity: 0;
-  transform: translate3d(10px, 0px, 0);
+  transform: translateX(10px), translate3d(0, 0px, 0);
   will-change: transform;
 }
 
@@ -233,11 +242,21 @@
   font-size: 13px;
   font-weight: 500;
 
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .list-view-item .owner {
   color: var(--secondary-foreground);
+}
+
+.list-view-item .owner-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.list-view-item .owner-wrapper .explicit-tag {
+  margin-bottom: -1px;
+  margin-right: 4px;
 }
 
 .list-view-item:hover .queue-button {

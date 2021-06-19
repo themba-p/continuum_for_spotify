@@ -54,6 +54,29 @@ function validate(code) {
   });
 }
 
+
+function refreshAccessToken() {
+  return new Promise(async (resolve, reject) => {
+    if (!_refreshToken) return reject();
+
+    const uri = "https://accounts.spotify.com/api/token";
+    const params = {
+      method: "POST",
+      body: `grant_type=refresh_token&refresh_token=${_refreshToken}`,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization:
+          "Basic " +
+          btoa(
+            `${spotifyCredentials.clientId}:${spotifyCredentials.clientSecret}`
+          ),
+      },
+    };
+
+    resolve(await getAuthTokens(uri, params));   
+  });
+}
+
 function getAuthTokens(uri, params) {
   return new Promise((resolve, reject) => {
     fetch(uri, params)
@@ -75,6 +98,8 @@ function getAuthTokens(uri, params) {
 
             _access_token = accessToken;
             _token_expiry = tokenExpiry;
+            _refreshToken = refreshToken;
+
             storeCredentials(accessToken, refreshToken, tokenExpiry);
             resolve(accessToken);
           })
@@ -92,44 +117,3 @@ function storeCredentials(accessToken, refreshToken, tokenExpiry) {
   chrome.storage.local.set({ [keys.tokenExpiry]: tokenExpiry.toJSON() });
 }
 
-function refreshAccessToken() {
-  return new Promise((resolve, reject) => {
-    if (!_refreshToken) return reject();
-
-    const uri = "https://accounts.spotify.com/api/token";
-    const params = {
-      method: "POST",
-      body: `grant_type=refresh_token&refresh_token=${_refreshToken}`,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization:
-          "Basic " +
-          btoa(
-            `${spotifyCredentials.clientId}:${spotifyCredentials.clientSecret}`
-          ),
-      },
-    };
-
-    fetch(uri, params)
-      .then((response) => {
-        response.json().then((responseJson) => {
-          const {
-            access_token: accessToken,
-            refresh_token: refreshToken,
-            expires_in: expiresIn,
-          } = responseJson;
-
-          let tokenExpiry = new Date();
-          tokenExpiry.setSeconds(tokenExpiry.getSeconds() + expiresIn);
-
-          _access_token = accessToken;
-          _refreshToken = refreshToken;
-          _token_expiry = tokenExpiry;
-
-          storeCredentials(accessToken, refreshToken, tokenExpiry);
-          resolve(accessToken);
-        });
-      })
-      .catch((e) => reject(e));
-  });
-}

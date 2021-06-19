@@ -198,7 +198,8 @@ exports.ToggleLibraryFilter = (show) => {
         targets: ".list-view-nav-item",
         opacity: [1, 0],
         translateX: [0, "-15px"],
-        duration: 300,
+        translateZ: 0,
+        duration: 500,
         complete: () =>
           (document.getElementById("list-view-nav").style.display = "none"),
       })
@@ -206,15 +207,31 @@ exports.ToggleLibraryFilter = (show) => {
           {
             targets: "#filter-bar",
             opacity: [0, 1],
-            duration: 300,
+            duration: 400,
+            maxWidth: [0, "250px"],
+            translateZ: 0,
             begin: () =>
               (document.getElementById(
                 "filter-library-container"
               ).style.display = "flex"),
             complete: () => document.getElementById("filter-bar").focus(),
           },
-          "-=80"
+          "-=400"
         )
+        // .add(
+        //   {
+        //     targets: "#filter-bar",
+        //     opacity: [0, 1],
+        //     duration: 150,
+        //     easing: "linear",
+        //     begin: () =>
+        //       (document.getElementById(
+        //         "filter-library-container"
+        //       ).style.display = "flex"),
+        //     complete: () => document.getElementById("filter-bar").focus(),
+        //   },
+        //   "-=100"
+        // )
         .add(
           {
             targets: "#filter-library-button",
@@ -243,19 +260,30 @@ exports.ToggleLibraryFilter = (show) => {
       tl.add({
         targets: "#filter-bar",
         opacity: [1, 0],
-        duration: 300,
+        maxWidth: ["250px", 0],
+        translateZ: 0,
+        duration: 400,
+        // complete: () =>
+        //   (document.getElementById("filter-library-container").style.display =
+        //     "none"),
+      }).add({
+        targets: "#filter-bar",
+        opacity: [1, 0],
+        duration: 150,
         complete: () =>
           (document.getElementById("filter-library-container").style.display =
             "none"),
-      })
+      }, "-=450")
+      
         .add({
           targets: ".list-view-nav-item",
-          opacity: 1,
-          translateX: 0,
+          opacity: [0, 1],
+          translateX: ["-15px", 0],
+          translateZ: 0,
           duration: 400,
           begin: () =>
             (document.getElementById("list-view-nav").style.display = "flex"),
-        })
+        }, "-= 400")
         .add(
           {
             targets: "#filter-close-button",
@@ -265,7 +293,7 @@ exports.ToggleLibraryFilter = (show) => {
               (document.getElementById("filter-close-button").style.display =
                 "none"),
           },
-          "-=1150"
+          "-=1250"
         )
         .add(
           {
@@ -276,7 +304,7 @@ exports.ToggleLibraryFilter = (show) => {
               (document.getElementById("filter-library-button").style.display =
                 "flex"),
           },
-          "-=600"
+          "-=700"
         );
     }
   });
@@ -305,7 +333,8 @@ exports.SwitchOverlay = (view, show = true) => {
           document.getElementById("search-button").style.display = "none";
           document.getElementById("library-button").style.display = "none";
           if (view != Common.View.Profile)
-            document.getElementById("profile-button").style.display = "none";
+            document.querySelector(".profile-button-wrapper").style.display =
+              "none";
         },
       });
 
@@ -335,7 +364,8 @@ exports.SwitchOverlay = (view, show = true) => {
               "none";
           }
 
-          document.getElementById("profile-button").style.display = "flex";
+          document.querySelector(".profile-button-wrapper").style.display =
+            "flex";
           document.getElementById("search-button").style.display = "flex";
           document.getElementById("library-button").style.display = "flex";
         },
@@ -407,7 +437,9 @@ function switchToDevices(show) {
         targets: "#refresh-devices-button",
         opacity: [0, 1],
         duration: 400,
-        begin:() => document.getElementById("refresh-devices-button").style.display = "flex",
+        begin: () =>
+          (document.getElementById("refresh-devices-button").style.display =
+            "flex"),
       });
 
       anime({
@@ -422,7 +454,9 @@ function switchToDevices(show) {
           targets: "#refresh-devices-button",
           opacity: [1, 0],
           duration: 400,
-          complete: () => document.getElementById("refresh-devices-button").style.display = "none",
+          complete: () =>
+            (document.getElementById("refresh-devices-button").style.display =
+              "none"),
         },
         "-= 150"
       );

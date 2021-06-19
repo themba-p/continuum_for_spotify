@@ -5,8 +5,9 @@ let Spotify = require("./modules/spotify.js");
 
 let categoryTracks, categoryPlaylists, categoryAlbums;
 let currentView, currentCategory;
-let _nowplaying, npInterval;
+let _nowplaying, npInterval, _profile;
 let waitingForPlaybackTransfer = false;
+let _listviewCollection;
 
 function log(content) {
   chrome.runtime.sendMessage({
@@ -24,13 +25,12 @@ function log(content) {
 
 async function initialize() {
   AppDOM.ShowLoadingIndicator(Common.View.Library);
-  
-  chrome.runtime.sendMessage({ message: "login" }, async (response) => {
+
+  chrome.runtime.sendMessage({ message: "login" }, (response) => {
     AppDOM.ShowLoadingIndicator(Common.View.Player, false);
     if (response?.token) {
       Spotify.prototype.setAccessToken(response.token);
       loadNowplaying();
-      loadProfile();
       AppDOM.SetButtonsDisabled(false);
     } else {
       checkFailureReason();
@@ -99,11 +99,12 @@ function initButtons() {
 
   document
     .getElementById("filter-close-button")
-    .addEventListener("click", () => {
-      AppDOM.ToggleLibraryFilter(false);
+    .addEventListener("click", async () => {
+      await AppDOM.ToggleLibraryFilter(false);
       const filterBar = document.getElementById("filter-bar");
       if (filterBar.value) {
         filterBar.value = "";
+        loadListViewItems(_listviewCollection);
       }
     });
 
@@ -122,6 +123,8 @@ function initButtons() {
   document.getElementById("profile-button").addEventListener("click", () => {
     if (currentView != Common.View.Profile) {
       switchView(Common.View.Profile);
+
+      loadProfile();
     } else {
       switchView(Common.View.Player);
     }
@@ -170,7 +173,7 @@ function initCategories() {
 
 function signIn() {
   AppDOM.ShowLoadingIndicator(Common.View.Login);
-  chrome.runtime.sendMessage({ message: "authenticate" }, function(response) {
+  chrome.runtime.sendMessage({ message: "authenticate" }, function (response) {
     AppDOM.ShowLoadingIndicator(Common.View.Login, false);
 
     if (chrome.runtime.lastError) log(chrome.runtime.lastError);
@@ -269,27 +272,27 @@ function switchCategory(category, force = false) {
 }
 
 function loadProfile() {
-  chrome.runtime.sendMessage({ message: "profile" }, (result) => {
-    if (result && result.item) {
-      AppDOM.UpdateProfile(result.item);
-    } else {
-      Spotify.prototype.getUserProfile().then((user) => {
-        if (user) {
-          AppDOM.UpdateProfile(user);
-          chrome.runtime.sendMessage({ message: "profile", item: user });
-        } else {
-          checkFailureReason();
-        }
-      });
-    }
-  });
+  AppDOM.ShowLoadingIndicator(Common.View.Profile);
+
+  if (!_profile) {
+    Spotify.prototype.getUserProfile().then((user) => {
+      _profile = user;
+      if (user) {
+        AppDOM.UpdateProfile(user);
+        chrome.runtime.sendMessage({ message: "profile", item: user });
+      } else {
+        checkFailureReason();
+      }
+    })
+    .finally(() => {
+      AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
+    })
+  } else {
+    AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
+  }
 }
 
 function updatePlaybackState(response) {
-  if (response?.isSaved) {
-    AppDOM.ToggleLikeState(response.isSaved)
-  }
-
   if (_nowplaying) {
     if (_nowplaying.shuffleState != response.shuffleState) {
       AppDOM.ToggleShuffleState(response);
@@ -350,10 +353,16 @@ function loadNowplaying(switchToView = true) {
         AppDOM.TogglePlackbackDisabledState(false);
 
         AppDOM.UpdateNowplaying(response);
-        if (response.device) AppDOM.UpdateActiveDevice(response.device);
         response.isSaved = await Spotify.prototype.isTracksSaved(response.id);
         updatePlaybackState(response);
-        AppDOM.TogglePlaybackState(response);
+        if (!_nowplaying) {
+          if (response?.isSaved) AppDOM.ToggleLikeState(response.isSaved);
+          AppDOM.ToggleShuffleState(response);
+          AppDOM.TogglePlaybackState(response);
+          AppDOM.ToggleRepeatState(response);
+          if (response.device) AppDOM.UpdateActiveDevice(response.device);
+        }
+
         _nowplaying = response;
       } else {
         AppDOM.TogglePlackbackDisabledState(true);
@@ -390,8 +399,6 @@ function loadListViewItems(items) {
   AppDOM.AnimateListViewItems(currentView);
 }
 
-let _listviewCollection;
-
 function loadLibrary(mediaType) {
   AppDOM.ShowLoadingIndicator(Common.View.Library);
   AppDOM.ClearListView();
@@ -413,7 +420,6 @@ function filterLibrary(query, mediaType) {
   const results = [];
   let titleMatches, artistMatches;
 
-  // you need to cache users library.
   if (query) {
     query = query.toLowerCase();
     titleMatches = items.filter((item) =>
@@ -673,7 +679,7 @@ exports.Initialize = () => {
   libraryButton = document.getElementById("library-button");
 
   this.SetButtonsDisabled(true);
-}
+};
 
 exports.InitPlaybackButtons = ({
   playPause,
@@ -706,7 +712,7 @@ exports.SetButtonsDisabled = (disabled) => {
   devicesButton.disabled = disabled;
   profileButton.disabled = disabled;
   libraryButton.disabled = disabled;
-}
+};
 
 exports.TogglePlackbackDisabledState = (isDisabled) => {
   playerPlayButton.disabled = isDisabled;
@@ -762,6 +768,7 @@ exports.ShowLoadingIndicator = (view, show = true) => {
       break;
     case Common.View.Library:
     case Common.View.Search:
+      document.getElementById("filter-library-button").disabled = show;
       document.getElementById("list-view-loading-indicator").style.display =
         display;
       break;
@@ -786,6 +793,14 @@ exports.ShowLoadingIndicator = (view, show = true) => {
         loadingIndicator.style.display = show ? "flex" : "none";
         retryButton.disabled = show;
       });
+      break;
+    case Common.View.Profile:
+      document.querySelector(".profile-button-wrapper .loader").style.display =
+        display;
+      document.getElementById("sign-out-button").disabled = show;
+      document.getElementById("open-profile-button").className = show
+        ? "text-button disabled-link"
+        : "text-button";
       break;
   }
 };
@@ -827,7 +842,6 @@ exports.AddDevice = ({ id, name, isActive, type }, selectDeviceFunc = null) => {
   const li = document.createElement("li");
   li.setAttribute("id", id);
   li.className = isActive ? "device-item device-active" : "device-item";
-  //"device-item" + isActive ? " device-active" : " device-inactive";
 
   let indicatorSrc =
     "https://open.scdn.co/cdn/images/equaliser-animated-green.73b73928.gif";
@@ -844,9 +858,8 @@ exports.AddDevice = ({ id, name, isActive, type }, selectDeviceFunc = null) => {
       iconImgSrc = `./assets/device-mobile-${iconColor}.svg`;
       break;
   }
-  /* <div class="content-fade"></div> */
-  li.innerHTML = 
-    `<div class="device-icon-wrapper">
+
+  li.innerHTML = `<div class="device-icon-wrapper">
       <img src="${iconImgSrc}" alt="" />
     </div>
     <p class="device-name">${name}</p>
@@ -916,7 +929,7 @@ exports.ClearListView = () => {
 };
 
 exports.AddToListViewContent = (
-  { id, name, author, imgUrl, uri, type },
+  { id, name, author, imgUrl, uri, type, explicit },
   playFunc,
   queueFunc = null
 ) => {
@@ -930,6 +943,28 @@ exports.AddToListViewContent = (
   const li = document.createElement("li");
   li.setAttribute("id", id);
   li.className = "list-view-item";
+
+  let owner = `<p class="owner">${subtitle}</p>`;
+  if (type === Common.MediaType.Track && explicit) {
+    owner = (
+      `<p class="owner-wrapper">
+        <svg
+          class="explicit-tag"
+          width="10"
+          height="11"
+          viewBox="0 0 10 11"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 0H0V11H10L10 0ZM7 3L4 3V5H7L7 6H4V8H7V9H3V2H7V3Z"
+            fill="#B3B3B3"
+          />
+        </svg>
+        <span class="owner">${subtitle}</span>
+      </p>`
+    );
+  }
 
   const innerContainerHTML = `<div class="cover">
     <img src="${imgUrl}" alt="" loading="lazy" style="height: 44px; width: 44px;">
@@ -951,7 +986,7 @@ exports.AddToListViewContent = (
     </div>
     <div class="info">
     <p class="title">${name}</p>
-    <p class="owner">${subtitle}</p>
+    ${owner}
     </div>`;
 
   const innerContainer = document.createElement("div");
@@ -1312,7 +1347,8 @@ exports.ToggleLibraryFilter = (show) => {
         targets: ".list-view-nav-item",
         opacity: [1, 0],
         translateX: [0, "-15px"],
-        duration: 300,
+        translateZ: 0,
+        duration: 500,
         complete: () =>
           (document.getElementById("list-view-nav").style.display = "none"),
       })
@@ -1320,15 +1356,31 @@ exports.ToggleLibraryFilter = (show) => {
           {
             targets: "#filter-bar",
             opacity: [0, 1],
-            duration: 300,
+            duration: 400,
+            maxWidth: [0, "250px"],
+            translateZ: 0,
             begin: () =>
               (document.getElementById(
                 "filter-library-container"
               ).style.display = "flex"),
             complete: () => document.getElementById("filter-bar").focus(),
           },
-          "-=80"
+          "-=400"
         )
+        // .add(
+        //   {
+        //     targets: "#filter-bar",
+        //     opacity: [0, 1],
+        //     duration: 150,
+        //     easing: "linear",
+        //     begin: () =>
+        //       (document.getElementById(
+        //         "filter-library-container"
+        //       ).style.display = "flex"),
+        //     complete: () => document.getElementById("filter-bar").focus(),
+        //   },
+        //   "-=100"
+        // )
         .add(
           {
             targets: "#filter-library-button",
@@ -1357,19 +1409,30 @@ exports.ToggleLibraryFilter = (show) => {
       tl.add({
         targets: "#filter-bar",
         opacity: [1, 0],
-        duration: 300,
+        maxWidth: ["250px", 0],
+        translateZ: 0,
+        duration: 400,
+        // complete: () =>
+        //   (document.getElementById("filter-library-container").style.display =
+        //     "none"),
+      }).add({
+        targets: "#filter-bar",
+        opacity: [1, 0],
+        duration: 150,
         complete: () =>
           (document.getElementById("filter-library-container").style.display =
             "none"),
-      })
+      }, "-=450")
+      
         .add({
           targets: ".list-view-nav-item",
-          opacity: 1,
-          translateX: 0,
+          opacity: [0, 1],
+          translateX: ["-15px", 0],
+          translateZ: 0,
           duration: 400,
           begin: () =>
             (document.getElementById("list-view-nav").style.display = "flex"),
-        })
+        }, "-= 400")
         .add(
           {
             targets: "#filter-close-button",
@@ -1379,7 +1442,7 @@ exports.ToggleLibraryFilter = (show) => {
               (document.getElementById("filter-close-button").style.display =
                 "none"),
           },
-          "-=1150"
+          "-=1250"
         )
         .add(
           {
@@ -1390,7 +1453,7 @@ exports.ToggleLibraryFilter = (show) => {
               (document.getElementById("filter-library-button").style.display =
                 "flex"),
           },
-          "-=600"
+          "-=700"
         );
     }
   });
@@ -1419,7 +1482,8 @@ exports.SwitchOverlay = (view, show = true) => {
           document.getElementById("search-button").style.display = "none";
           document.getElementById("library-button").style.display = "none";
           if (view != Common.View.Profile)
-            document.getElementById("profile-button").style.display = "none";
+            document.querySelector(".profile-button-wrapper").style.display =
+              "none";
         },
       });
 
@@ -1449,7 +1513,8 @@ exports.SwitchOverlay = (view, show = true) => {
               "none";
           }
 
-          document.getElementById("profile-button").style.display = "flex";
+          document.querySelector(".profile-button-wrapper").style.display =
+            "flex";
           document.getElementById("search-button").style.display = "flex";
           document.getElementById("library-button").style.display = "flex";
         },
@@ -1521,7 +1586,9 @@ function switchToDevices(show) {
         targets: "#refresh-devices-button",
         opacity: [0, 1],
         duration: 400,
-        begin:() => document.getElementById("refresh-devices-button").style.display = "flex",
+        begin: () =>
+          (document.getElementById("refresh-devices-button").style.display =
+            "flex"),
       });
 
       anime({
@@ -1536,7 +1603,9 @@ function switchToDevices(show) {
           targets: "#refresh-devices-button",
           opacity: [1, 0],
           duration: 400,
-          complete: () => document.getElementById("refresh-devices-button").style.display = "none",
+          complete: () =>
+            (document.getElementById("refresh-devices-button").style.display =
+              "none"),
         },
         "-= 150"
       );
@@ -1620,8 +1689,6 @@ exports.LoadImage = async (url, elem) => {
 
 let SpotifyWebApi = require("spotify-web-api-js");
 let Common = require("./common.js");
-
-// // remember to convert object to Json object by adding quotations to keys.
 
 var Spotify = (function () {
   var _accessToken = null;
@@ -1777,15 +1844,6 @@ var Spotify = (function () {
         log(e);
         return null;
       });
-
-    // return new Promise((resolve, reject) => {
-    //   func(options).then((response, err) => {
-    //     (err) ? reject(err) : resolve(response?.total);
-    //   })
-    // }).catch((e) => {
-    //   log(e);
-    //   return;
-    // });
   }
 
   function getMedia(offset, limit, type) {
@@ -1804,12 +1862,6 @@ var Spotify = (function () {
         log(e);
         return null;
       });
-
-    //   return new Promise((resolve, reject) => {
-    //     func(options).then((response, err) => {
-    //       (err) ? reject(null) : resolve(response?.items);
-    //     });
-    // });
   }
 
   function convertMedia(item, type) {
@@ -1846,7 +1898,6 @@ var Spotify = (function () {
           author: item.artists.map((a) => a.name).join(", "),
           imgUrl:
             item.images.length >= 3 ? item.images[2]?.url : item.images[0]?.url,
-          // length: item.tracks.total, item.total_tracks
           uri: item.uri,
           type: type,
         };

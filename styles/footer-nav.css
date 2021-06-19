@@ -51,7 +51,7 @@
 }
 
 #devices-button img {
-  margin-right: 4px;
+  margin-right: 8px;
 
 }
 
@@ -90,11 +90,36 @@
   stroke: var(--brand-primary-color);
 }
 
+.profile-button-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 36px;
+  width: 36px;
+
+  position: relative;
+}
+
 #profile-button {
-  height: 20px;
-  width: 20px;
+  height: 100%;
+  width: 100%;
+  margin: 0;
 
   overflow: hidden;
+}
+
+.profile-button-wrapper .loader,
+.profile-button-wrapper .loader:after {
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+}
+
+.profile-button-wrapper .loader {
+  display: none;
+  font-size: 1px;
+  position: absolute;
 }
 
 #refresh-devices-button {

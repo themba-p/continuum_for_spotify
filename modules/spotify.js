@@ -3,8 +3,6 @@
 let SpotifyWebApi = require("spotify-web-api-js");
 let Common = require("./common.js");
 
-// // remember to convert object to Json object by adding quotations to keys.
-
 var Spotify = (function () {
   var _accessToken = null;
   let spotifyApi;
@@ -159,15 +157,6 @@ var Spotify = (function () {
         log(e);
         return null;
       });
-
-    // return new Promise((resolve, reject) => {
-    //   func(options).then((response, err) => {
-    //     (err) ? reject(err) : resolve(response?.total);
-    //   })
-    // }).catch((e) => {
-    //   log(e);
-    //   return;
-    // });
   }
 
   function getMedia(offset, limit, type) {
@@ -186,12 +175,6 @@ var Spotify = (function () {
         log(e);
         return null;
       });
-
-    //   return new Promise((resolve, reject) => {
-    //     func(options).then((response, err) => {
-    //       (err) ? reject(null) : resolve(response?.items);
-    //     });
-    // });
   }
 
   function convertMedia(item, type) {
@@ -228,7 +211,6 @@ var Spotify = (function () {
           author: item.artists.map((a) => a.name).join(", "),
           imgUrl:
             item.images.length >= 3 ? item.images[2]?.url : item.images[0]?.url,
-          // length: item.tracks.total, item.total_tracks
           uri: item.uri,
           type: type,
         };

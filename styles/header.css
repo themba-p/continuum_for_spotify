@@ -66,7 +66,7 @@
 #explicit-tag {
   display: none;
   margin-right: 4px;
-  margin-top: -2px;
+  margin-top: -1px;
 }
 
 #owner {
@@ -76,7 +76,6 @@
 }
 
 #now-playing .content-fade {
-  /* height: 64px; */
   width: 110px;
 
   margin-right: -10px;
@@ -108,7 +107,7 @@
 }
 
 .like-inactive svg path {
-  stroke: var(--secondary-foreground);
+  stroke: var(--primary-foreground);
   fill: "none";
 }
 
@@ -117,9 +116,9 @@
 }
 
 #now-playing-status {
-  color: #808080;
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 4%;
+  color: var(--brand-primary-color);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 8%;
   margin-bottom: 2px;
 }
