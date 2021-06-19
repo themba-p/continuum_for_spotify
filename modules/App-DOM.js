@@ -28,7 +28,7 @@ exports.Initialize = () => {
   libraryButton = document.getElementById("library-button");
 
   this.SetButtonsDisabled(true);
-}
+};
 
 exports.InitPlaybackButtons = ({
   playPause,
@@ -61,7 +61,7 @@ exports.SetButtonsDisabled = (disabled) => {
   devicesButton.disabled = disabled;
   profileButton.disabled = disabled;
   libraryButton.disabled = disabled;
-}
+};
 
 exports.TogglePlackbackDisabledState = (isDisabled) => {
   playerPlayButton.disabled = isDisabled;
@@ -117,6 +117,7 @@ exports.ShowLoadingIndicator = (view, show = true) => {
       break;
     case Common.View.Library:
     case Common.View.Search:
+      document.getElementById("filter-library-button").disabled = show;
       document.getElementById("list-view-loading-indicator").style.display =
         display;
       break;
@@ -141,6 +142,14 @@ exports.ShowLoadingIndicator = (view, show = true) => {
         loadingIndicator.style.display = show ? "flex" : "none";
         retryButton.disabled = show;
       });
+      break;
+    case Common.View.Profile:
+      document.querySelector(".profile-button-wrapper .loader").style.display =
+        display;
+      document.getElementById("sign-out-button").disabled = show;
+      document.getElementById("open-profile-button").className = show
+        ? "text-button disabled-link"
+        : "text-button";
       break;
   }
 };
@@ -182,7 +191,6 @@ exports.AddDevice = ({ id, name, isActive, type }, selectDeviceFunc = null) => {
   const li = document.createElement("li");
   li.setAttribute("id", id);
   li.className = isActive ? "device-item device-active" : "device-item";
-  //"device-item" + isActive ? " device-active" : " device-inactive";
 
   let indicatorSrc =
     "https://open.scdn.co/cdn/images/equaliser-animated-green.73b73928.gif";
@@ -199,9 +207,8 @@ exports.AddDevice = ({ id, name, isActive, type }, selectDeviceFunc = null) => {
       iconImgSrc = `./assets/device-mobile-${iconColor}.svg`;
       break;
   }
-  /* <div class="content-fade"></div> */
-  li.innerHTML = 
-    `<div class="device-icon-wrapper">
+
+  li.innerHTML = `<div class="device-icon-wrapper">
       <img src="${iconImgSrc}" alt="" />
     </div>
     <p class="device-name">${name}</p>
@@ -271,7 +278,7 @@ exports.ClearListView = () => {
 };
 
 exports.AddToListViewContent = (
-  { id, name, author, imgUrl, uri, type },
+  { id, name, author, imgUrl, uri, type, explicit },
   playFunc,
   queueFunc = null
 ) => {
@@ -285,6 +292,28 @@ exports.AddToListViewContent = (
   const li = document.createElement("li");
   li.setAttribute("id", id);
   li.className = "list-view-item";
+
+  let owner = `<p class="owner">${subtitle}</p>`;
+  if (type === Common.MediaType.Track && explicit) {
+    owner = (
+      `<p class="owner-wrapper">
+        <svg
+          class="explicit-tag"
+          width="10"
+          height="11"
+          viewBox="0 0 10 11"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 0H0V11H10L10 0ZM7 3L4 3V5H7L7 6H4V8H7V9H3V2H7V3Z"
+            fill="#B3B3B3"
+          />
+        </svg>
+        <span class="owner">${subtitle}</span>
+      </p>`
+    );
+  }
 
   const innerContainerHTML = `<div class="cover">
     <img src="${imgUrl}" alt="" loading="lazy" style="height: 44px; width: 44px;">
@@ -306,7 +335,7 @@ exports.AddToListViewContent = (
     </div>
     <div class="info">
     <p class="title">${name}</p>
-    <p class="owner">${subtitle}</p>
+    ${owner}
     </div>`;
 
   const innerContainer = document.createElement("div");

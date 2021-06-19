@@ -68,6 +68,11 @@
   transition: color 0.2s linear;
 }
 
+.disabled-link {
+  opacity: .6;
+  pointer-events: none;
+}
+
 #open-profile-button svg {
   margin-left: -3px;
   margin-top: 1px;
@@ -99,6 +104,10 @@
 #sign-out-button:hover {
   background: var(--secondary-background);
   color: var(--primary-foreground);
+}
+
+#sign-out-button:disabled {
+  background: var(--secondary-background);
 }
 
 #close-profile-view {

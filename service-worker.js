@@ -3,7 +3,6 @@ importScripts("auth.js");
 
 const _credentials = getSpotifyCredentials(true);
 let _state, _access_token, _token_expiry, _refreshToken;
-let nowplaying, profile, savedTracks;
 
 const keys = {
   accessToken: "access_token",
@@ -33,7 +32,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         interactive: true,
       },
       (redirectUri) => {
-        console.log(_credentials);
         if (chrome.runtime.lastError) {
           console.warn(chrome.runtime.lastError.message);
           sendResponse({ message: "fail" });

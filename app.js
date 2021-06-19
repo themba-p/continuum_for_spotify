@@ -4,8 +4,9 @@ let Spotify = require("./modules/spotify.js");
 
 let categoryTracks, categoryPlaylists, categoryAlbums;
 let currentView, currentCategory;
-let _nowplaying, npInterval;
+let _nowplaying, npInterval, _profile;
 let waitingForPlaybackTransfer = false;
+let _listviewCollection;
 
 function log(content) {
   chrome.runtime.sendMessage({
@@ -23,13 +24,12 @@ function log(content) {
 
 async function initialize() {
   AppDOM.ShowLoadingIndicator(Common.View.Library);
-  
-  chrome.runtime.sendMessage({ message: "login" }, async (response) => {
+
+  chrome.runtime.sendMessage({ message: "login" }, (response) => {
     AppDOM.ShowLoadingIndicator(Common.View.Player, false);
     if (response?.token) {
       Spotify.prototype.setAccessToken(response.token);
       loadNowplaying();
-      loadProfile();
       AppDOM.SetButtonsDisabled(false);
     } else {
       checkFailureReason();
@@ -98,11 +98,12 @@ function initButtons() {
 
   document
     .getElementById("filter-close-button")
-    .addEventListener("click", () => {
-      AppDOM.ToggleLibraryFilter(false);
+    .addEventListener("click", async () => {
+      await AppDOM.ToggleLibraryFilter(false);
       const filterBar = document.getElementById("filter-bar");
       if (filterBar.value) {
         filterBar.value = "";
+        loadListViewItems(_listviewCollection);
       }
     });
 
@@ -121,6 +122,8 @@ function initButtons() {
   document.getElementById("profile-button").addEventListener("click", () => {
     if (currentView != Common.View.Profile) {
       switchView(Common.View.Profile);
+
+      loadProfile();
     } else {
       switchView(Common.View.Player);
     }
@@ -169,7 +172,7 @@ function initCategories() {
 
 function signIn() {
   AppDOM.ShowLoadingIndicator(Common.View.Login);
-  chrome.runtime.sendMessage({ message: "authenticate" }, function(response) {
+  chrome.runtime.sendMessage({ message: "authenticate" }, function (response) {
     AppDOM.ShowLoadingIndicator(Common.View.Login, false);
 
     if (chrome.runtime.lastError) log(chrome.runtime.lastError);
@@ -268,27 +271,27 @@ function switchCategory(category, force = false) {
 }
 
 function loadProfile() {
-  chrome.runtime.sendMessage({ message: "profile" }, (result) => {
-    if (result && result.item) {
-      AppDOM.UpdateProfile(result.item);
-    } else {
-      Spotify.prototype.getUserProfile().then((user) => {
-        if (user) {
-          AppDOM.UpdateProfile(user);
-          chrome.runtime.sendMessage({ message: "profile", item: user });
-        } else {
-          checkFailureReason();
-        }
-      });
-    }
-  });
+  AppDOM.ShowLoadingIndicator(Common.View.Profile);
+
+  if (!_profile) {
+    Spotify.prototype.getUserProfile().then((user) => {
+      _profile = user;
+      if (user) {
+        AppDOM.UpdateProfile(user);
+        chrome.runtime.sendMessage({ message: "profile", item: user });
+      } else {
+        checkFailureReason();
+      }
+    })
+    .finally(() => {
+      AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
+    })
+  } else {
+    AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
+  }
 }
 
 function updatePlaybackState(response) {
-  if (response?.isSaved) {
-    AppDOM.ToggleLikeState(response.isSaved)
-  }
-
   if (_nowplaying) {
     if (_nowplaying.shuffleState != response.shuffleState) {
       AppDOM.ToggleShuffleState(response);
@@ -349,10 +352,16 @@ function loadNowplaying(switchToView = true) {
         AppDOM.TogglePlackbackDisabledState(false);
 
         AppDOM.UpdateNowplaying(response);
-        if (response.device) AppDOM.UpdateActiveDevice(response.device);
         response.isSaved = await Spotify.prototype.isTracksSaved(response.id);
         updatePlaybackState(response);
-        AppDOM.TogglePlaybackState(response);
+        if (!_nowplaying) {
+          if (response?.isSaved) AppDOM.ToggleLikeState(response.isSaved);
+          AppDOM.ToggleShuffleState(response);
+          AppDOM.TogglePlaybackState(response);
+          AppDOM.ToggleRepeatState(response);
+          if (response.device) AppDOM.UpdateActiveDevice(response.device);
+        }
+
         _nowplaying = response;
       } else {
         AppDOM.TogglePlackbackDisabledState(true);
@@ -389,8 +398,6 @@ function loadListViewItems(items) {
   AppDOM.AnimateListViewItems(currentView);
 }
 
-let _listviewCollection;
-
 function loadLibrary(mediaType) {
   AppDOM.ShowLoadingIndicator(Common.View.Library);
   AppDOM.ClearListView();
@@ -412,7 +419,6 @@ function filterLibrary(query, mediaType) {
   const results = [];
   let titleMatches, artistMatches;
 
-  // you need to cache users library.
   if (query) {
     query = query.toLowerCase();
     titleMatches = items.filter((item) =>
