@@ -2,7 +2,7 @@ importScripts("secrets.js");
 importScripts("auth.js");
 
 const _credentials = getSpotifyCredentials(true);
-let _state, _access_token, _token_expiry;
+let _state, _access_token, _token_expiry, _refreshToken;
 let nowplaying, profile, savedTracks;
 
 const keys = {
@@ -15,7 +15,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.message === "log") {
     console.warn(request.content);
   } else if (request.message === "login") {
-    getAccessTokenAsync(sendResponse);
+    loadLocalStorageAsync().then(() => {
+      if (isAccessTokenValid()) {
+        sendResponse({ message: "success", token: _access_token });
+      } else {
+        refreshAccessToken().then((token) => {
+          sendResponse({ message: "success", token: token });
+        }).catch(() => {
+          sendResponse({ message: "fail" });
+        })
+      }
+    });
   } else if (request.message === "authenticate") {
     chrome.identity.launchWebAuthFlow(
       {
@@ -50,3 +60,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   return true;
 });
+
+function loadLocalStorageAsync() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(null, (items) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+      const allKeys = Object.keys(items);
+      allKeys.forEach((key) => {
+        if (key === keys.accessToken) _access_token = items[key];
+        else if (key === keys.refreshToken) _refreshToken = items[key];
+        else if (key === keys.tokenExpiry) {
+          const expiryJSON = items[key];
+
+          if (expiryJSON)
+            _token_expiry = new Date(expiryJSON)
+        }
+      });
+      resolve(items);
+    });
+  });
+}
+
+function isAccessTokenValid() {
+  if (!_token_expiry) return false;
+
+  const dateNow = new Date();
+  if (dateNow > _token_expiry) return false;
+
+  return true;
+}
+
+

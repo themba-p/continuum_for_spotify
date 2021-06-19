@@ -92,226 +92,44 @@ function storeCredentials(accessToken, refreshToken, tokenExpiry) {
   chrome.storage.local.set({ [keys.tokenExpiry]: tokenExpiry.toJSON() });
 }
 
-function readLocalStorageAsync(key) {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get([key], (result) => {
-      if (result && result[key]) {
-        resolve(result[key]);
-      } else {
-        reject();
-      }
-    });
-  }).catch((e) => console.log(e));
-}
-
-function getAccessTokenAsync(sendResponse) {
-  if (_access_token && _token_expiry) {
-    const currentDate = new Date();
-
-    if (currentDate > _token_expiry) {
-      refreshAccessToken()
-        .then((newAccessToken) => {
-          if (newAccessToken) {
-            _access_token = newAccessToken;
-            sendResponse({ message: "success", token: newAccessToken });
-          } else {
-            console.log("failed to get new access token");
-            sendResponse({ message: "failure" });
-          }
-        })
-        .catch((e) => {
-          console.log("failed to get new access token");
-          sendResponse({ message: "failure" });
-        });
-    } else {
-      sendResponse({ message: "success", token: _access_token });
-    }
-  } else {
-    readLocalStorageAsync(keys.accessToken)
-      .then((token) => {
-        _access_token = token;
-
-        if (!token) {
-          sendResponse({ message: "failed to get access token." });
-          return;
-        }
-
-        readLocalStorageAsync(keys.tokenExpiry)
-          .then((tokenExpiryJSON) => {
-            if (tokenExpiryJSON) {
-              const currentDate = new Date();
-              const tokenExpiry = new Date(tokenExpiryJSON);
-
-              _token_expiry = tokenExpiry;
-
-              if (currentDate > tokenExpiry) {
-                refreshAccessToken()
-                  .then((newAccessToken) => {
-                    if (newAccessToken) {
-                      _access_token = newAccessToken;
-                      sendResponse({
-                        message: "success",
-                        token: newAccessToken,
-                      });
-                    } else {
-                      console.log("failed to get new access token");
-                      sendResponse({ message: "failure" });
-                    }
-                  })
-                  .catch((e) => {
-                    console.log("failed to get new access token");
-                    sendResponse({ message: "failure" });
-                  });
-              } else {
-                sendResponse({ message: "success", token: token });
-              }
-            }
-          })
-          .catch((e) => {
-            console.log(e);
-            sendResponse({ message: "failure" });
-          });
-      })
-      .catch((e) => {
-        console.log(e);
-        sendResponse({ message: "failure" });
-      });
-  }
-}
-
-function getAccessTokenAsync(sendResponse) {
-  if (_access_token && _token_expiry) {
-    const currentDate = new Date();
-
-    if (currentDate > _token_expiry) {
-      refreshAccessToken()
-        .then((newAccessToken) => {
-          if (newAccessToken) {
-            _access_token = newAccessToken;
-            sendResponse({ message: "success", token: newAccessToken });
-          } else {
-            console.log("failed to get new access token");
-            sendResponse({ message: "failure" });
-          }
-        })
-        .catch((e) => {
-          console.log("failed to get new access token");
-          sendResponse({ message: "failure" });
-        });
-    } else {
-      sendResponse({ message: "success", token: _access_token });
-    }
-  } else {
-    readLocalStorageAsync(keys.accessToken)
-      .then((token) => {
-        _access_token = token;
-
-        if (!token) {
-          sendResponse({ message: "failed to get access token." });
-          return;
-        }
-
-        readLocalStorageAsync(keys.tokenExpiry)
-          .then((tokenExpiryJSON) => {
-            if (tokenExpiryJSON) {
-              const currentDate = new Date();
-              const tokenExpiry = new Date(tokenExpiryJSON);
-
-              _token_expiry = tokenExpiry;
-
-              if (currentDate > tokenExpiry) {
-                refreshAccessToken()
-                  .then((newAccessToken) => {
-                    if (newAccessToken) {
-                      _access_token = newAccessToken;
-                      sendResponse({
-                        message: "success",
-                        token: newAccessToken,
-                      });
-                    } else {
-                      console.log("failed to get new access token");
-                      sendResponse({ message: "failure" });
-                    }
-                  })
-                  .catch((e) => {
-                    console.log("failed to get new access token");
-                    sendResponse({ message: "failure" });
-                  });
-              } else {
-                sendResponse({ message: "success", token: token });
-              }
-            }
-          })
-          .catch((e) => {
-            console.log(e);
-            sendResponse({ message: "failure" });
-          });
-      })
-      .catch((e) => {
-        console.log(e);
-        sendResponse({ message: "failure" });
-      });
-  }
-}
-
 function refreshAccessToken() {
-  const uri = "https://accounts.spotify.com/api/token";
-
   return new Promise((resolve, reject) => {
-    readLocalStorageAsync(keys.refreshToken).then((result) => {
-      const params = {
-        method: "POST",
-        body: `grant_type=refresh_token&refresh_token=${result}`,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          Authorization:
-            "Basic " +
-            btoa(
-              `21d0b374958f4733a98bd1e5919ae85c:e38945e6a0d34e4b8b2bc28b179148c4`
-            ),
-        },
-      };
+    if (!_refreshToken) return reject();
 
-      fetch(uri, params)
-        .then((response) => {
-          response.json().then((responseJson) => {
-            const {
-              access_token: accessToken,
-              refresh_token: refreshToken,
-              expires_in: expiresIn,
-            } = responseJson;
+    const uri = "https://accounts.spotify.com/api/token";
+    const params = {
+      method: "POST",
+      body: `grant_type=refresh_token&refresh_token=${_refreshToken}`,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization:
+          "Basic " +
+          btoa(
+            `${spotifyCredentials.clientId}:${spotifyCredentials.clientSecret}`
+          ),
+      },
+    };
 
-            let tokenExpiry = new Date();
-            tokenExpiry.setSeconds(tokenExpiry.getSeconds() + expiresIn);
+    fetch(uri, params)
+      .then((response) => {
+        response.json().then((responseJson) => {
+          const {
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            expires_in: expiresIn,
+          } = responseJson;
 
-            _access_token = accessToken;
-            _token_expiry = tokenExpiry;
+          let tokenExpiry = new Date();
+          tokenExpiry.setSeconds(tokenExpiry.getSeconds() + expiresIn);
 
-            chrome.storage.local.set(
-              { [keys.accessToken]: accessToken },
-              () => {}
-            );
+          _access_token = accessToken;
+          _refreshToken = refreshToken;
+          _token_expiry = tokenExpiry;
 
-            chrome.storage.local.set(
-              {
-                [keys.refreshToken]: refreshToken,
-              },
-              function () {}
-            );
-
-            chrome.storage.local.set(
-              {
-                [keys.tokenExpiry]: tokenExpiry.toJSON(),
-              },
-              function () {}
-            );
-            resolve(accessToken);
-          });
-        })
-        .catch((e) => {
-          console.log(e);
-          reject(null);
+          storeCredentials(accessToken, refreshToken, tokenExpiry);
+          resolve(accessToken);
         });
-    });
+      })
+      .catch((e) => reject(e));
   });
 }
