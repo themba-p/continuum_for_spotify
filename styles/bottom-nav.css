@@ -2,7 +2,7 @@
 
 #bottom-nav {
   background: var(--primary-background);
-  
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,6 +17,29 @@
   display: flex;
   align-items: center;
   height: 40px;
+}
+
+#player-skip-back,
+#player-skip-forward {
+  opacity: 0.75;
+  transition: opacity 0.15s linear;
+}
+
+#player-skip-back:hover,
+#player-skip-forward:hover {
+  opacity: 1;
+}
+
+#player-skip-back,
+#player-skip-forward,
+#player-playback-state button {
+  transition: transform 0.2s linear;
+}
+
+#player-skip-back:active,
+#player-skip-forward:active,
+#player-playback-state button:active {
+  transform: scale(0.85);
 }
 
 #player-controls button,
@@ -39,16 +62,16 @@
   position: absolute;
   top: 0;
   left: 0;
-  transition: background .15s linear;
+  transition: transform 0.2s linear, background 0.15s linear;
 }
 
 #player-playback-state button:hover svg {
-  transform: scale(1.2);
+  transform: scale(1.1);
 }
 
 #player-playback-state button svg path {
   fill: #000;
-  transition: fill .15s linear;
+  transition: fill 0.15s linear;
 }
 
 #player-playback-state button:disabled {
@@ -59,12 +82,11 @@
 
 #player-playback-state button:disabled svg path {
   fill: #fff;
-  opacity: .5;
+  opacity: 0.5;
 }
 
 #player-playback-state button svg {
-  /* margin-bottom: -2px; */
-  transition: transform .3s cubic-bezier(0.39, 0.575, 0.565, 1);
+  transition: transform 0.2s linear;
 }
 
 #player-pause-button {
@@ -115,5 +137,3 @@
   width: 48px;
   height: 48px;
 }
-
-

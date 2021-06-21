@@ -30,7 +30,6 @@ async function initialize() {
     if (response?.token) {
       Spotify.prototype.setAccessToken(response.token);
       loadNowplaying();
-      AppDOM.SetButtonsDisabled(false);
     } else {
       checkFailureReason();
     }
@@ -72,6 +71,11 @@ function initButtons() {
       if (currentView && currentView === Common.View.Search) {
         switchView(Common.View.Library);
         switchCategory(currentCategory, true);
+
+        const searchBar = document.getElementById("search-bar");
+        if (searchBar.value) {
+          searchBar.value = "";
+        }
       } else {
         switchView(Common.View.Player);
       }
@@ -274,25 +278,27 @@ function loadProfile() {
   AppDOM.ShowLoadingIndicator(Common.View.Profile);
 
   if (!_profile) {
-    Spotify.prototype.getUserProfile().then((user) => {
-      _profile = user;
-      if (user) {
-        AppDOM.UpdateProfile(user);
-        chrome.runtime.sendMessage({ message: "profile", item: user });
-      } else {
-        checkFailureReason();
-      }
-    })
-    .finally(() => {
-      AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
-    })
+    Spotify.prototype
+      .getUserProfile()
+      .then((user) => {
+        _profile = user;
+        if (user) {
+          AppDOM.UpdateProfile(user);
+          chrome.runtime.sendMessage({ message: "profile", item: user });
+        } else {
+          checkFailureReason();
+        }
+      })
+      .finally(() => {
+        AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
+      });
   } else {
     AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
   }
 }
 
 function updatePlaybackState(response) {
-  if (_nowplaying) {
+  if (_nowplaying && response) {
     if (_nowplaying.shuffleState != response.shuffleState) {
       AppDOM.ToggleShuffleState(response);
     }
@@ -315,6 +321,14 @@ function updatePlaybackState(response) {
         AppDOM.UpdateActiveDevice(response.device);
       }
     }
+
+    if (_nowplaying.id != response.id) {
+      AppDOM.UpdateListNowplaying(response?.id);
+    }
+  }
+
+  if (response) {
+    AppDOM.UpdateListNowplaying(response?.id);
   }
 }
 
@@ -349,6 +363,7 @@ function loadNowplaying(switchToView = true) {
     .getPlaybackState()
     .then(async (response) => {
       if (response) {
+        AppDOM.SetButtonsDisabled(false);
         AppDOM.TogglePlackbackDisabledState(false);
 
         AppDOM.UpdateNowplaying(response);
@@ -396,6 +411,8 @@ function loadListViewItems(items) {
     }
   }
   AppDOM.AnimateListViewItems(currentView);
+
+  AppDOM.UpdateListNowplaying(_nowplaying?.id);
 }
 
 function loadLibrary(mediaType) {

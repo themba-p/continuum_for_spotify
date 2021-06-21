@@ -31,7 +31,6 @@ async function initialize() {
     if (response?.token) {
       Spotify.prototype.setAccessToken(response.token);
       loadNowplaying();
-      AppDOM.SetButtonsDisabled(false);
     } else {
       checkFailureReason();
     }
@@ -73,6 +72,11 @@ function initButtons() {
       if (currentView && currentView === Common.View.Search) {
         switchView(Common.View.Library);
         switchCategory(currentCategory, true);
+
+        const searchBar = document.getElementById("search-bar");
+        if (searchBar.value) {
+          searchBar.value = "";
+        }
       } else {
         switchView(Common.View.Player);
       }
@@ -275,25 +279,27 @@ function loadProfile() {
   AppDOM.ShowLoadingIndicator(Common.View.Profile);
 
   if (!_profile) {
-    Spotify.prototype.getUserProfile().then((user) => {
-      _profile = user;
-      if (user) {
-        AppDOM.UpdateProfile(user);
-        chrome.runtime.sendMessage({ message: "profile", item: user });
-      } else {
-        checkFailureReason();
-      }
-    })
-    .finally(() => {
-      AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
-    })
+    Spotify.prototype
+      .getUserProfile()
+      .then((user) => {
+        _profile = user;
+        if (user) {
+          AppDOM.UpdateProfile(user);
+          chrome.runtime.sendMessage({ message: "profile", item: user });
+        } else {
+          checkFailureReason();
+        }
+      })
+      .finally(() => {
+        AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
+      });
   } else {
     AppDOM.ShowLoadingIndicator(Common.View.Profile, false);
   }
 }
 
 function updatePlaybackState(response) {
-  if (_nowplaying) {
+  if (_nowplaying && response) {
     if (_nowplaying.shuffleState != response.shuffleState) {
       AppDOM.ToggleShuffleState(response);
     }
@@ -316,6 +322,14 @@ function updatePlaybackState(response) {
         AppDOM.UpdateActiveDevice(response.device);
       }
     }
+
+    if (_nowplaying.id != response.id) {
+      AppDOM.UpdateListNowplaying(response?.id);
+    }
+  }
+
+  if (response) {
+    AppDOM.UpdateListNowplaying(response?.id);
   }
 }
 
@@ -350,6 +364,7 @@ function loadNowplaying(switchToView = true) {
     .getPlaybackState()
     .then(async (response) => {
       if (response) {
+        AppDOM.SetButtonsDisabled(false);
         AppDOM.TogglePlackbackDisabledState(false);
 
         AppDOM.UpdateNowplaying(response);
@@ -397,6 +412,8 @@ function loadListViewItems(items) {
     }
   }
   AppDOM.AnimateListViewItems(currentView);
+
+  AppDOM.UpdateListNowplaying(_nowplaying?.id);
 }
 
 function loadLibrary(mediaType) {
@@ -662,6 +679,7 @@ let playerPlayButton,
   playerRepeatButton;
 
 let devicesButton, profileButton, libraryButton;
+let isFilterOpen = false;
 
 const listViewContent = document.getElementById("list-view-content");
 const devicesListView = document.getElementById("devices-list-view");
@@ -733,7 +751,7 @@ exports.ShowMessagePopup = (message) => {
     targets: messagePopup,
     opacity: [0, 1],
     translateY: ["-100%", 0],
-    duration: 800,
+    duration: 500,
     easing: "easeOutExpo",
 
     complete: () => {
@@ -742,10 +760,10 @@ exports.ShowMessagePopup = (message) => {
           targets: messagePopup,
           opacity: [1, 0],
           translateY: [0, "-100%"],
-          duration: 800,
+          duration: 500,
           easing: "easeOutExpo",
         });
-      }, 2000);
+      }, 1500);
     },
   });
 };
@@ -818,6 +836,8 @@ exports.SwitchView = async (view, oldValue) => {
   document.getElementById("no-network-view").style.display =
     view != Common.View.NoNetwork ? "none" : "flex";
 
+  if (isFilterOpen) this.ToggleLibraryFilter(false);
+
   switch (view) {
     case Common.View.Player:
     case Common.View.Login:
@@ -835,6 +855,7 @@ exports.SwitchView = async (view, oldValue) => {
 };
 
 exports.ToggleLibraryFilter = (show) => {
+  isFilterOpen = show;
   return AppViewDOM.ToggleLibraryFilter(show);
 };
 
@@ -946,8 +967,7 @@ exports.AddToListViewContent = (
 
   let owner = `<p class="owner">${subtitle}</p>`;
   if (type === Common.MediaType.Track && explicit) {
-    owner = (
-      `<p class="owner-wrapper">
+    owner = `<p class="owner-wrapper">
         <svg
           class="explicit-tag"
           width="10"
@@ -962,8 +982,7 @@ exports.AddToListViewContent = (
           />
         </svg>
         <span class="owner">${subtitle}</span>
-      </p>`
-    );
+      </p>`;
   }
 
   const innerContainerHTML = `<div class="cover">
@@ -1045,6 +1064,19 @@ exports.AnimateListViewItems = (view) => {
     });
   }
 };
+
+exports.UpdateListNowplaying = (nowplayingId) => {
+  const activeItems = document.querySelectorAll(".active-list-item");
+  const activeListItem = document.getElementById(nowplayingId);
+
+  if(activeItems) {
+    activeItems.forEach((item) => item.className = "list-view-item");
+  }
+  if (activeListItem &&
+    activeListItem.className != "list-view-item active-list-item") {
+    activeListItem.className = "list-view-item active-list-item";
+  }
+}
 
 const nowPlayingImg = document.getElementById("now-playing-img");
 const nowPlayingTitle = document.getElementById("title");
@@ -1367,20 +1399,6 @@ exports.ToggleLibraryFilter = (show) => {
           },
           "-=400"
         )
-        // .add(
-        //   {
-        //     targets: "#filter-bar",
-        //     opacity: [0, 1],
-        //     duration: 150,
-        //     easing: "linear",
-        //     begin: () =>
-        //       (document.getElementById(
-        //         "filter-library-container"
-        //       ).style.display = "flex"),
-        //     complete: () => document.getElementById("filter-bar").focus(),
-        //   },
-        //   "-=100"
-        // )
         .add(
           {
             targets: "#filter-library-button",
@@ -1412,9 +1430,6 @@ exports.ToggleLibraryFilter = (show) => {
         maxWidth: ["250px", 0],
         translateZ: 0,
         duration: 400,
-        // complete: () =>
-        //   (document.getElementById("filter-library-container").style.display =
-        //     "none"),
       }).add({
         targets: "#filter-bar",
         opacity: [1, 0],
