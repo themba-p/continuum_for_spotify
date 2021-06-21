@@ -35,6 +35,7 @@
           placeholder="Search track, playlist, album"
           aria-label="search Spotify catalogue"
           spellcheck="false"
+          autocomplete="off"
         />
       </div>
       <button class="close-button text-button">Close</button>
@@ -104,20 +105,23 @@
         <header id="list-view-header">
           <ul id="list-view-nav">
             <li id="category-tracks" class="list-view-nav-item active">
-              Tracks
+              <span>Tracks</span>
             </li>
             <li id="category-playlists" class="list-view-nav-item">
-              Playlists
+              <span>Playlists</span>
             </li>
-            <li id="category-albums" class="list-view-nav-item">Albums</li>
+            <li id="category-albums" class="list-view-nav-item">
+              <span>Albums</span>
+            </li>
           </ul>
           <div id="filter-library-container">
             <input
               id="filter-bar"
               type="search"
-              placeholder="filter..."
+              placeholder="Search Your Library"
               aria-label="Filter library content"
               spellcheck="false"
+              autocomplete="off"
             />
           </div>
           <div id="filter-actions-wrapper">
@@ -280,8 +284,10 @@
             src="./assets/device-default-inactive.svg"
             alt="active device"
           />
-          <span id="active-device-text">No devices </span>
-          <span id="active-device-name"></span>
+          <p>
+            <span id="active-device-text">No devices</span>
+            <span id="active-device-name"></span>
+          </p>
           <svg
             id="devices-chev"
             width="16"

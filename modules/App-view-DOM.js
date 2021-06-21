@@ -218,20 +218,6 @@ exports.ToggleLibraryFilter = (show) => {
           },
           "-=400"
         )
-        // .add(
-        //   {
-        //     targets: "#filter-bar",
-        //     opacity: [0, 1],
-        //     duration: 150,
-        //     easing: "linear",
-        //     begin: () =>
-        //       (document.getElementById(
-        //         "filter-library-container"
-        //       ).style.display = "flex"),
-        //     complete: () => document.getElementById("filter-bar").focus(),
-        //   },
-        //   "-=100"
-        // )
         .add(
           {
             targets: "#filter-library-button",
@@ -263,9 +249,6 @@ exports.ToggleLibraryFilter = (show) => {
         maxWidth: ["250px", 0],
         translateZ: 0,
         duration: 400,
-        // complete: () =>
-        //   (document.getElementById("filter-library-container").style.display =
-        //     "none"),
       }).add({
         targets: "#filter-bar",
         opacity: [1, 0],

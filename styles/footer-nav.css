@@ -36,10 +36,22 @@
 #devices-button {
   color: var(--secondary-foreground);
   font-size: 12px;
-  line-height: 1.1;
 
   padding: 0 0 0 12px;
+  text-align: left;
   transition: color 0.2s linear;
+}
+
+#devices-button p {
+  line-height: 1.5;
+  transform: translate3d(0, 0, 0);
+  max-width: 150px;
+  
+  margin-right: 2px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #devices-button:hover {
@@ -55,20 +67,9 @@
 
 }
 
-#active-device-text {
-  text-align: left;
-}
-
 #active-device-name {
   color: var(--primary-foreground);
   font-weight: 500;
-  margin: 0 2px;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-  max-width: 100px;
 }
 
 #devices-chev {

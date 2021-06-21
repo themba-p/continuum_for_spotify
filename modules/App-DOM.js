@@ -11,6 +11,7 @@ let playerPlayButton,
   playerRepeatButton;
 
 let devicesButton, profileButton, libraryButton;
+let isFilterOpen = false;
 
 const listViewContent = document.getElementById("list-view-content");
 const devicesListView = document.getElementById("devices-list-view");
@@ -82,7 +83,7 @@ exports.ShowMessagePopup = (message) => {
     targets: messagePopup,
     opacity: [0, 1],
     translateY: ["-100%", 0],
-    duration: 800,
+    duration: 500,
     easing: "easeOutExpo",
 
     complete: () => {
@@ -91,10 +92,10 @@ exports.ShowMessagePopup = (message) => {
           targets: messagePopup,
           opacity: [1, 0],
           translateY: [0, "-100%"],
-          duration: 800,
+          duration: 500,
           easing: "easeOutExpo",
         });
-      }, 2000);
+      }, 1500);
     },
   });
 };
@@ -167,6 +168,8 @@ exports.SwitchView = async (view, oldValue) => {
   document.getElementById("no-network-view").style.display =
     view != Common.View.NoNetwork ? "none" : "flex";
 
+  if (isFilterOpen) this.ToggleLibraryFilter(false);
+
   switch (view) {
     case Common.View.Player:
     case Common.View.Login:
@@ -184,6 +187,7 @@ exports.SwitchView = async (view, oldValue) => {
 };
 
 exports.ToggleLibraryFilter = (show) => {
+  isFilterOpen = show;
   return AppViewDOM.ToggleLibraryFilter(show);
 };
 
@@ -295,8 +299,7 @@ exports.AddToListViewContent = (
 
   let owner = `<p class="owner">${subtitle}</p>`;
   if (type === Common.MediaType.Track && explicit) {
-    owner = (
-      `<p class="owner-wrapper">
+    owner = `<p class="owner-wrapper">
         <svg
           class="explicit-tag"
           width="10"
@@ -311,8 +314,7 @@ exports.AddToListViewContent = (
           />
         </svg>
         <span class="owner">${subtitle}</span>
-      </p>`
-    );
+      </p>`;
   }
 
   const innerContainerHTML = `<div class="cover">
@@ -394,6 +396,19 @@ exports.AnimateListViewItems = (view) => {
     });
   }
 };
+
+exports.UpdateListNowplaying = (nowplayingId) => {
+  const activeItems = document.querySelectorAll(".active-list-item");
+  const activeListItem = document.getElementById(nowplayingId);
+
+  if(activeItems) {
+    activeItems.forEach((item) => item.className = "list-view-item");
+  }
+  if (activeListItem &&
+    activeListItem.className != "list-view-item active-list-item") {
+    activeListItem.className = "list-view-item active-list-item";
+  }
+}
 
 const nowPlayingImg = document.getElementById("now-playing-img");
 const nowPlayingTitle = document.getElementById("title");
