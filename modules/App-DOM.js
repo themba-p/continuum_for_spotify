@@ -16,10 +16,10 @@ let isFilterOpen = false;
 const listViewContent = document.getElementById("list-view-content");
 const devicesListView = document.getElementById("devices-list-view");
 
-function log(message) {
+function log(content) {
   chrome.runtime.sendMessage({
     message: "log",
-    error: message,
+    content: content,
   });
 }
 

@@ -23,7 +23,7 @@ function log(content) {
 })();
 
 async function initialize() {
-  AppDOM.ShowLoadingIndicator(Common.View.Library);
+  AppDOM.ShowLoadingIndicator(Common.View.Player);
 
   chrome.runtime.sendMessage({ message: "login" }, (response) => {
     AppDOM.ShowLoadingIndicator(Common.View.Player, false);
