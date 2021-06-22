@@ -24,7 +24,7 @@ function log(content) {
 })();
 
 async function initialize() {
-  AppDOM.ShowLoadingIndicator(Common.View.Library);
+  AppDOM.ShowLoadingIndicator(Common.View.Player);
 
   chrome.runtime.sendMessage({ message: "login" }, (response) => {
     AppDOM.ShowLoadingIndicator(Common.View.Player, false);
@@ -684,10 +684,10 @@ let isFilterOpen = false;
 const listViewContent = document.getElementById("list-view-content");
 const devicesListView = document.getElementById("devices-list-view");
 
-function log(message) {
+function log(content) {
   chrome.runtime.sendMessage({
     message: "log",
-    error: message,
+    content: content,
   });
 }
 
