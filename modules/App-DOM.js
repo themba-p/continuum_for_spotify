@@ -401,14 +401,16 @@ exports.UpdateListNowplaying = (nowplayingId) => {
   const activeItems = document.querySelectorAll(".active-list-item");
   const activeListItem = document.getElementById(nowplayingId);
 
-  if(activeItems) {
-    activeItems.forEach((item) => item.className = "list-view-item");
+  if (activeItems) {
+    activeItems.forEach((item) => (item.className = "list-view-item"));
   }
-  if (activeListItem &&
-    activeListItem.className != "list-view-item active-list-item") {
+  if (
+    activeListItem &&
+    activeListItem.className != "list-view-item active-list-item"
+  ) {
     activeListItem.className = "list-view-item active-list-item";
   }
-}
+};
 
 const nowPlayingImg = document.getElementById("now-playing-img");
 const nowPlayingTitle = document.getElementById("title");
@@ -436,29 +438,49 @@ exports.UpdateProfile = ({ name, imgUrl, uri }) => {
 };
 
 exports.ClearNowplaying = () => {
-  nowPlayingImg.src = "./assets/cover-placeholder.svg";
-  nowPlayingTitle.textContent = "...";
-  owner.textContent = "...";
-  explicitTag.style.display = "none";
+  let src = "./assets/cover-placeholder.svg";
+  if (nowPlayingImg.src != src) nowPlayingImg.src = src;
+
+  if (nowPlayingTitle.textContent != "...") nowPlayingTitle.textContent = "...";
+  if (owner.textContent != "...") owner.textContent = "...";
+  if (explicitTag.style.display != "none") explicitTag.style.display = "none";
   if (nowplayingStatus.textContent != "...")
     nowplayingStatus.textContent = "...";
+
+  if (nowPlayingIndicator.style.display != "none")
+    nowPlayingIndicator.style.display = "none";
 };
 
 exports.UpdateNowplaying = ({ title, author, imgUrl, explicit }) => {
   if (nowplayingStatus.textContent != "NOWPLAYING")
     nowplayingStatus.textContent = "NOWPLAYING";
 
-  nowPlayingImg.src = imgUrl ? imgUrl : "./assets/cover-transparent.svg";
-  nowPlayingTitle.textContent = title;
-  owner.textContent = author;
-  explicitTag.style.display = explicit ? "block" : "none";
+  const _imgUrl = imgUrl ? imgUrl : "./assets/cover-transparent.svg";
+  if (nowPlayingImg.src !== _imgUrl) nowPlayingImg.src = _imgUrl;
+
+  if (nowPlayingTitle.textContent !== title)
+    nowPlayingTitle.textContent = title;
+
+  if (owner.textContent !== author) owner.textContent = author;
+
+  const disp = explicit ? "block" : "none";
+  if (explicitTag.style.display != disp) {
+    explicitTag.style.display = disp;
+  }
 };
 
 exports.TogglePlaybackState = ({ isPlaying }) => {
-  log(isPlaying);
-  playerPlayButton.style.display = isPlaying ? "none" : "block";
-  playerPauseButton.style.display = isPlaying ? "block" : "none";
-  nowPlayingIndicator.style.display = isPlaying ? "flex" : "none";
+  const playDisplay = isPlaying ? "none" : "block";
+  if (playerPlayButton.style.display != playDisplay)
+    playerPlayButton.style.display = playDisplay;
+
+  const pauseDisplay = isPlaying ? "block" : "none";
+  if (playerPauseButton.style.display != pauseDisplay)
+    playerPauseButton.style.display = pauseDisplay;
+
+  const npDisplay = isPlaying ? "flex" : "none";
+  if (nowPlayingIndicator.style.display != npDisplay)
+    nowPlayingIndicator.style.display = npDisplay;
 
   const npTitle = isPlaying ? "NOWPLAYING" : "PAUSED";
   if (nowplayingStatus.textContent != npTitle)
@@ -467,12 +489,14 @@ exports.TogglePlaybackState = ({ isPlaying }) => {
 
 exports.ToggleShuffleState = ({ shuffleState }) => {
   const className = shuffleState ? "shuffle-on" : "shuffle-off";
-  playerShuffleButton.className = `text-button ${className}`;
+  if (playerShuffleButton.className != `text-button ${className}`)
+    playerShuffleButton.className = `text-button ${className}`;
 };
 
 exports.ToggleLikeState = (isSaved) => {
   const className = isSaved ? "like-active" : "like-inactive";
-  playerToggleLikeButton.className = `text-button ${className}`;
+  if (playerToggleLikeButton.className != `text-button ${className}`)
+    playerToggleLikeButton.className = `text-button ${className}`;
 };
 
 exports.ToggleRepeatState = ({ repeatState }) => {
@@ -506,6 +530,9 @@ exports.ToggleRepeatState = ({ repeatState }) => {
       </svg>`;
   }
 
-  playerRepeatButton.innerHTML = svgIconHTML;
-  playerRepeatButton.className = className;
+  if (playerRepeatButton.innerHTML != svgIconHTML)
+    playerRepeatButton.innerHTML = svgIconHTML;
+
+  if (playerRepeatButton.className != className)
+    playerRepeatButton.className = className;
 };

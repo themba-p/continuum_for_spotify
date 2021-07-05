@@ -5,7 +5,8 @@ let Spotify = require("./modules/spotify.js");
 
 let categoryTracks, categoryPlaylists, categoryAlbums;
 let currentView, currentCategory;
-let _nowplaying, npInterval, _profile;
+let _nowplaying, _profile;
+let ntwrkInterval, devicesInterval, npInterval;
 let waitingForPlaybackTransfer = false;
 let _listviewCollection;
 
@@ -201,14 +202,15 @@ function signOut() {
   });
 }
 
-async function checkFailureReason() {
-  AppDOM.ShowLoadingIndicator(Common.View.NoXView);
+async function checkFailureReason(showLoading = true) {
+  if (showLoading) AppDOM.ShowLoadingIndicator(Common.View.NoXView);
   chrome.runtime.sendMessage({ message: "login" }, async (response) => {
     if (response && response?.token) {
       if (await Common.IsConnected()) {
         if (!(await hasActiveDevices())) {
           AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
           switchView(Common.View.NoDevice);
+          probeDevicesChange();
         } else {
           AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
           switchView(Common.View.Player);
@@ -216,6 +218,7 @@ async function checkFailureReason() {
       } else {
         AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
         switchView(Common.View.NoNetwork);
+        probeNetworkChange();
       }
     } else {
       if (await Common.IsConnected()) {
@@ -224,9 +227,36 @@ async function checkFailureReason() {
       } else {
         AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
         switchView(Common.View.NoNetwork);
+        probeNetworkChange();
       }
     }
   });
+}
+
+function clearIntervals() {
+  // if (npInterval) clearInterval(npInterval);
+  if (ntwrkInterval) clearInterval(ntwrkInterval);
+  if (devicesInterval) clearInterval(devicesInterval);
+}
+
+function probeNetworkChange() {
+  clearIntervals();
+  ntwrkInterval = setInterval(async () => {
+    if (await Common.IsConnected()) {
+      clearIntervals();
+      loadNowplaying();
+    }
+  }, 1000);
+}
+
+function probeDevicesChange() {
+  clearIntervals();
+  devicesInterval = setInterval(async () => {
+    if (await hasActiveDevices()) {
+      clearIntervals();
+      loadNowplaying();
+    }
+  }, 1000);
 }
 
 function hasActiveDevices() {
@@ -337,19 +367,22 @@ function probeNowplaying() {
   Spotify.prototype.getPlaybackState().then(async (response) => {
     if (response) {
       AppDOM.TogglePlackbackDisabledState(false);
-      if (_nowplaying && _nowplaying.id != response.id) {
+
+      // workaround when nowplaying data hasn't been loaded
+      //AppDOM.ClearNowplaying();
+      AppDOM.UpdateNowplaying(response);
+
+      if (_nowplaying?.id != response.id) {
         AppDOM.ShowLoadingIndicator(Common.View.Player);
 
-        AppDOM.ClearNowplaying();
-        AppDOM.UpdateNowplaying(response);
-
-        //isCurrentTrackSaved(response.id);
         response.isSaved = await Spotify.prototype.isTracksSaved(response.id);
         AppDOM.ShowLoadingIndicator(Common.View.Player, false);
       }
 
       updatePlaybackState(response);
       _nowplaying = response;
+    } else {
+      checkFailureReason(false);
     }
   });
 }
@@ -1069,14 +1102,16 @@ exports.UpdateListNowplaying = (nowplayingId) => {
   const activeItems = document.querySelectorAll(".active-list-item");
   const activeListItem = document.getElementById(nowplayingId);
 
-  if(activeItems) {
-    activeItems.forEach((item) => item.className = "list-view-item");
+  if (activeItems) {
+    activeItems.forEach((item) => (item.className = "list-view-item"));
   }
-  if (activeListItem &&
-    activeListItem.className != "list-view-item active-list-item") {
+  if (
+    activeListItem &&
+    activeListItem.className != "list-view-item active-list-item"
+  ) {
     activeListItem.className = "list-view-item active-list-item";
   }
-}
+};
 
 const nowPlayingImg = document.getElementById("now-playing-img");
 const nowPlayingTitle = document.getElementById("title");
@@ -1104,29 +1139,49 @@ exports.UpdateProfile = ({ name, imgUrl, uri }) => {
 };
 
 exports.ClearNowplaying = () => {
-  nowPlayingImg.src = "./assets/cover-placeholder.svg";
-  nowPlayingTitle.textContent = "...";
-  owner.textContent = "...";
-  explicitTag.style.display = "none";
+  let src = "./assets/cover-placeholder.svg";
+  if (nowPlayingImg.src != src) nowPlayingImg.src = src;
+
+  if (nowPlayingTitle.textContent != "...") nowPlayingTitle.textContent = "...";
+  if (owner.textContent != "...") owner.textContent = "...";
+  if (explicitTag.style.display != "none") explicitTag.style.display = "none";
   if (nowplayingStatus.textContent != "...")
     nowplayingStatus.textContent = "...";
+
+  if (nowPlayingIndicator.style.display != "none")
+    nowPlayingIndicator.style.display = "none";
 };
 
 exports.UpdateNowplaying = ({ title, author, imgUrl, explicit }) => {
   if (nowplayingStatus.textContent != "NOWPLAYING")
     nowplayingStatus.textContent = "NOWPLAYING";
 
-  nowPlayingImg.src = imgUrl ? imgUrl : "./assets/cover-transparent.svg";
-  nowPlayingTitle.textContent = title;
-  owner.textContent = author;
-  explicitTag.style.display = explicit ? "block" : "none";
+  const _imgUrl = imgUrl ? imgUrl : "./assets/cover-transparent.svg";
+  if (nowPlayingImg.src !== _imgUrl) nowPlayingImg.src = _imgUrl;
+
+  if (nowPlayingTitle.textContent !== title)
+    nowPlayingTitle.textContent = title;
+
+  if (owner.textContent !== author) owner.textContent = author;
+
+  const disp = explicit ? "block" : "none";
+  if (explicitTag.style.display != disp) {
+    explicitTag.style.display = disp;
+  }
 };
 
 exports.TogglePlaybackState = ({ isPlaying }) => {
-  log(isPlaying);
-  playerPlayButton.style.display = isPlaying ? "none" : "block";
-  playerPauseButton.style.display = isPlaying ? "block" : "none";
-  nowPlayingIndicator.style.display = isPlaying ? "flex" : "none";
+  const playDisplay = isPlaying ? "none" : "block";
+  if (playerPlayButton.style.display != playDisplay)
+    playerPlayButton.style.display = playDisplay;
+
+  const pauseDisplay = isPlaying ? "block" : "none";
+  if (playerPauseButton.style.display != pauseDisplay)
+    playerPauseButton.style.display = pauseDisplay;
+
+  const npDisplay = isPlaying ? "flex" : "none";
+  if (nowPlayingIndicator.style.display != npDisplay)
+    nowPlayingIndicator.style.display = npDisplay;
 
   const npTitle = isPlaying ? "NOWPLAYING" : "PAUSED";
   if (nowplayingStatus.textContent != npTitle)
@@ -1135,12 +1190,14 @@ exports.TogglePlaybackState = ({ isPlaying }) => {
 
 exports.ToggleShuffleState = ({ shuffleState }) => {
   const className = shuffleState ? "shuffle-on" : "shuffle-off";
-  playerShuffleButton.className = `text-button ${className}`;
+  if (playerShuffleButton.className != `text-button ${className}`)
+    playerShuffleButton.className = `text-button ${className}`;
 };
 
 exports.ToggleLikeState = (isSaved) => {
   const className = isSaved ? "like-active" : "like-inactive";
-  playerToggleLikeButton.className = `text-button ${className}`;
+  if (playerToggleLikeButton.className != `text-button ${className}`)
+    playerToggleLikeButton.className = `text-button ${className}`;
 };
 
 exports.ToggleRepeatState = ({ repeatState }) => {
@@ -1174,8 +1231,11 @@ exports.ToggleRepeatState = ({ repeatState }) => {
       </svg>`;
   }
 
-  playerRepeatButton.innerHTML = svgIconHTML;
-  playerRepeatButton.className = className;
+  if (playerRepeatButton.innerHTML != svgIconHTML)
+    playerRepeatButton.innerHTML = svgIconHTML;
+
+  if (playerRepeatButton.className != className)
+    playerRepeatButton.className = className;
 };
 
 },{"./App-view-DOM.js":3,"./common.js":4,"animejs":6}],3:[function(require,module,exports){
@@ -1750,10 +1810,10 @@ var Spotify = (function () {
     return steps;
   }
 
-  function log(message) {
+  function log(content) {
     chrome.runtime.sendMessage({
       message: "log",
-      error: message,
+      content: content,
     });
   }
 
@@ -1861,8 +1921,8 @@ var Spotify = (function () {
       });
   }
 
-  function getMedia(offset, limit, type) {
-    let func = getFunc(type);
+  async function getMedia(offset, limit, type) {
+    let func = await getFunc(type);
 
     const options = {
       limit: limit,
@@ -1879,74 +1939,107 @@ var Spotify = (function () {
       });
   }
 
+  let cache = new Map();
+
   function convertMedia(item, type) {
-    switch (type) {
-      case Common.MediaType.Track:
-        if (item?.track) item = item.track;
+    if (!cache.has(item)) {
+      let media;
+      switch (type) {
+        case Common.MediaType.Track:
+          if (item?.track) item = item.track;
 
-        return {
-          id: item.id,
-          name: item.name,
-          author: item.artists.map((a) => a.name).join(", "),
-          explicit: item.explicit,
-          imgUrl: item.album?.images[2]?.url,
-          uri: item.uri,
-          type: type,
-        };
-      case Common.MediaType.Playlist:
-        return {
-          id: item.id,
-          name: item.name,
-          author: item.owner.display_name,
-          imgUrl:
-            item.images.length >= 3 ? item.images[2]?.url : item.images[0]?.url,
-          length: item.tracks.total,
-          uri: item.uri,
-          type: type,
-        };
-      case Common.MediaType.Album:
-        if (item?.album) item = item.album;
+          media = {
+            id: item.id,
+            name: item.name,
+            author: item.artists.map((a) => a.name).join(", "),
+            explicit: item.explicit,
+            imgUrl: item.album?.images[2]?.url,
+            uri: item.uri,
+            type: type,
+          };
+          break;
+        case Common.MediaType.Playlist:
+          media = {
+            id: item.id,
+            name: item.name,
+            author: item.owner.display_name,
+            imgUrl:
+              item.images.length >= 3
+                ? item.images[2]?.url
+                : item.images[0]?.url,
+            length: item.tracks.total,
+            uri: item.uri,
+            type: type,
+          };
+          break;
+        case Common.MediaType.Album:
+          if (item?.album) item = item.album;
 
-        return {
-          id: item.id,
-          name: item.name,
-          author: item.artists.map((a) => a.name).join(", "),
-          imgUrl:
-            item.images.length >= 3 ? item.images[2]?.url : item.images[0]?.url,
-          uri: item.uri,
-          type: type,
-        };
+          media = {
+            id: item.id,
+            name: item.name,
+            author: item.artists.map((a) => a.name).join(", "),
+            imgUrl:
+              item.images.length >= 3
+                ? item.images[2]?.url
+                : item.images[0]?.url,
+            uri: item.uri,
+            type: type,
+          };
+          break;
+      }
+
+      cache.set(item, media);
     }
+
+    return cache.get(item);
   }
+
+  const libraryCache = new Map();
 
   Constr.prototype.getAllMedia = async (type) => {
     if (!_accessToken || !spotifyApi)
       return new Promise((resolve) => resolve(null));
 
-    const items = [];
     const step = 20;
 
     const total = await getTotal(type);
-
     if (!total || total < 0 || isNaN(total)) return;
 
-    let offset = 0;
-    const limits = getSteps(total, step);
-    if (!limits) return;
+    let _cache = libraryCache.get(type);
 
-    for (let limit of limits) {
-      const response = await getMedia(offset, limit, type);
+    // what if items have been added and removed but length remains the same?
+     let refresh = true;
+    if (_cache) {
+      if (_cache.length === total) {
+        const items = await getMedia(0, 1, type);
+        const item = convertMedia(items?.[0], type);
+        refresh = !(item?.id === _cache?.[0].id);
+      }
+    }
 
-      if (response) {
-        const files = response.map((item) => convertMedia(item, type));
-        if (files) items.push(...files);
+    if (refresh) {
+      const items = [];
+      let offset = 0;
+      const limits = getSteps(total, step);
+      if (!limits) return;
+
+      for (let limit of limits) {
+        const response = await getMedia(offset, limit, type);
+
+        if (response) {
+          const files = response.map((item) => convertMedia(item, type));
+          if (files) items.push(...files);
+        }
+
+        offset += limit;
       }
 
-      offset += limit;
+      libraryCache.set(type, items);
     }
 
     return new Promise((resolve, reject) => {
-      items && items.length > 0 ? resolve(items) : reject(null);
+      resolve(libraryCache.get(type));
     });
   };
 

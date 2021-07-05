@@ -48,10 +48,10 @@ var Spotify = (function () {
     return steps;
   }
 
-  function log(message) {
+  function log(content) {
     chrome.runtime.sendMessage({
       message: "log",
-      error: message,
+      content: content,
     });
   }
 
@@ -159,8 +159,8 @@ var Spotify = (function () {
       });
   }
 
-  function getMedia(offset, limit, type) {
-    let func = getFunc(type);
+  async function getMedia(offset, limit, type) {
+    let func = await getFunc(type);
 
     const options = {
       limit: limit,
@@ -177,74 +177,107 @@ var Spotify = (function () {
       });
   }
 
+  let cache = new Map();
+
   function convertMedia(item, type) {
-    switch (type) {
-      case Common.MediaType.Track:
-        if (item?.track) item = item.track;
+    if (!cache.has(item)) {
+      let media;
+      switch (type) {
+        case Common.MediaType.Track:
+          if (item?.track) item = item.track;
 
-        return {
-          id: item.id,
-          name: item.name,
-          author: item.artists.map((a) => a.name).join(", "),
-          explicit: item.explicit,
-          imgUrl: item.album?.images[2]?.url,
-          uri: item.uri,
-          type: type,
-        };
-      case Common.MediaType.Playlist:
-        return {
-          id: item.id,
-          name: item.name,
-          author: item.owner.display_name,
-          imgUrl:
-            item.images.length >= 3 ? item.images[2]?.url : item.images[0]?.url,
-          length: item.tracks.total,
-          uri: item.uri,
-          type: type,
-        };
-      case Common.MediaType.Album:
-        if (item?.album) item = item.album;
+          media = {
+            id: item.id,
+            name: item.name,
+            author: item.artists.map((a) => a.name).join(", "),
+            explicit: item.explicit,
+            imgUrl: item.album?.images[2]?.url,
+            uri: item.uri,
+            type: type,
+          };
+          break;
+        case Common.MediaType.Playlist:
+          media = {
+            id: item.id,
+            name: item.name,
+            author: item.owner.display_name,
+            imgUrl:
+              item.images.length >= 3
+                ? item.images[2]?.url
+                : item.images[0]?.url,
+            length: item.tracks.total,
+            uri: item.uri,
+            type: type,
+          };
+          break;
+        case Common.MediaType.Album:
+          if (item?.album) item = item.album;
 
-        return {
-          id: item.id,
-          name: item.name,
-          author: item.artists.map((a) => a.name).join(", "),
-          imgUrl:
-            item.images.length >= 3 ? item.images[2]?.url : item.images[0]?.url,
-          uri: item.uri,
-          type: type,
-        };
+          media = {
+            id: item.id,
+            name: item.name,
+            author: item.artists.map((a) => a.name).join(", "),
+            imgUrl:
+              item.images.length >= 3
+                ? item.images[2]?.url
+                : item.images[0]?.url,
+            uri: item.uri,
+            type: type,
+          };
+          break;
+      }
+
+      cache.set(item, media);
     }
+
+    return cache.get(item);
   }
+
+  const libraryCache = new Map();
 
   Constr.prototype.getAllMedia = async (type) => {
     if (!_accessToken || !spotifyApi)
       return new Promise((resolve) => resolve(null));
 
-    const items = [];
     const step = 20;
 
     const total = await getTotal(type);
-
     if (!total || total < 0 || isNaN(total)) return;
 
-    let offset = 0;
-    const limits = getSteps(total, step);
-    if (!limits) return;
+    let _cache = libraryCache.get(type);
 
-    for (let limit of limits) {
-      const response = await getMedia(offset, limit, type);
+    // what if items have been added and removed but length remains the same?
+     let refresh = true;
+    if (_cache) {
+      if (_cache.length === total) {
+        const items = await getMedia(0, 1, type);
+        const item = convertMedia(items?.[0], type);
+        refresh = !(item?.id === _cache?.[0].id);
+      }
+    }
 
-      if (response) {
-        const files = response.map((item) => convertMedia(item, type));
-        if (files) items.push(...files);
+    if (refresh) {
+      const items = [];
+      let offset = 0;
+      const limits = getSteps(total, step);
+      if (!limits) return;
+
+      for (let limit of limits) {
+        const response = await getMedia(offset, limit, type);
+
+        if (response) {
+          const files = response.map((item) => convertMedia(item, type));
+          if (files) items.push(...files);
+        }
+
+        offset += limit;
       }
 
-      offset += limit;
+      libraryCache.set(type, items);
     }
 
     return new Promise((resolve, reject) => {
-      items && items.length > 0 ? resolve(items) : reject(null);
+      resolve(libraryCache.get(type));
     });
   };
 
