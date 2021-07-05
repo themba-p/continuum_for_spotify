@@ -4,7 +4,8 @@ let Spotify = require("./modules/spotify.js");
 
 let categoryTracks, categoryPlaylists, categoryAlbums;
 let currentView, currentCategory;
-let _nowplaying, npInterval, _profile;
+let _nowplaying, _profile;
+let ntwrkInterval, devicesInterval, npInterval;
 let waitingForPlaybackTransfer = false;
 let _listviewCollection;
 
@@ -200,14 +201,15 @@ function signOut() {
   });
 }
 
-async function checkFailureReason() {
-  AppDOM.ShowLoadingIndicator(Common.View.NoXView);
+async function checkFailureReason(showLoading = true) {
+  if (showLoading) AppDOM.ShowLoadingIndicator(Common.View.NoXView);
   chrome.runtime.sendMessage({ message: "login" }, async (response) => {
     if (response && response?.token) {
       if (await Common.IsConnected()) {
         if (!(await hasActiveDevices())) {
           AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
           switchView(Common.View.NoDevice);
+          probeDevicesChange();
         } else {
           AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
           switchView(Common.View.Player);
@@ -215,6 +217,7 @@ async function checkFailureReason() {
       } else {
         AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
         switchView(Common.View.NoNetwork);
+        probeNetworkChange();
       }
     } else {
       if (await Common.IsConnected()) {
@@ -223,9 +226,36 @@ async function checkFailureReason() {
       } else {
         AppDOM.ShowLoadingIndicator(Common.View.NoXView, false);
         switchView(Common.View.NoNetwork);
+        probeNetworkChange();
       }
     }
   });
+}
+
+function clearIntervals() {
+  // if (npInterval) clearInterval(npInterval);
+  if (ntwrkInterval) clearInterval(ntwrkInterval);
+  if (devicesInterval) clearInterval(devicesInterval);
+}
+
+function probeNetworkChange() {
+  clearIntervals();
+  ntwrkInterval = setInterval(async () => {
+    if (await Common.IsConnected()) {
+      clearIntervals();
+      loadNowplaying();
+    }
+  }, 1000);
+}
+
+function probeDevicesChange() {
+  clearIntervals();
+  devicesInterval = setInterval(async () => {
+    if (await hasActiveDevices()) {
+      clearIntervals();
+      loadNowplaying();
+    }
+  }, 1000);
 }
 
 function hasActiveDevices() {
@@ -336,19 +366,22 @@ function probeNowplaying() {
   Spotify.prototype.getPlaybackState().then(async (response) => {
     if (response) {
       AppDOM.TogglePlackbackDisabledState(false);
-      if (_nowplaying && _nowplaying.id != response.id) {
+
+      // workaround when nowplaying data hasn't been loaded
+      //AppDOM.ClearNowplaying();
+      AppDOM.UpdateNowplaying(response);
+
+      if (_nowplaying?.id != response.id) {
         AppDOM.ShowLoadingIndicator(Common.View.Player);
 
-        AppDOM.ClearNowplaying();
-        AppDOM.UpdateNowplaying(response);
-
-        //isCurrentTrackSaved(response.id);
         response.isSaved = await Spotify.prototype.isTracksSaved(response.id);
         AppDOM.ShowLoadingIndicator(Common.View.Player, false);
       }
 
       updatePlaybackState(response);
       _nowplaying = response;
+    } else {
+      checkFailureReason(false);
     }
   });
 }
